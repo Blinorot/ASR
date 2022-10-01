@@ -5,11 +5,10 @@ from typing import List
 import numpy as np
 import torch
 import torchaudio
-from torch import Tensor
-from torch.utils.data import Dataset
-
 from hw_asr.base.base_text_encoder import BaseTextEncoder
 from hw_asr.utils.parse_config import ConfigParser
+from torch import Tensor
+from torch.utils.data import Dataset
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +29,7 @@ class BaseDataset(Dataset):
         self.config_parser = config_parser
         self.wave_augs = wave_augs
         self.spec_augs = spec_augs
-        self.log_spec = config_parser["preprocessing"]["log_spec"]
+        self.log_spec = config_parser["preprocessing"].get("log_spec", True) # Use log scale by default
 
         self._assert_index_is_valid(index)
         index = self._filter_records_from_dataset(index, max_audio_length, max_text_length, limit)
@@ -47,7 +46,7 @@ class BaseDataset(Dataset):
         return {
             "audio": audio_wave,
             "spectrogram": audio_spec,
-            "duration": audio_wave.shape(1) / self.config_parser["preprocessing"]["sr"],
+            "duration": audio_wave.shape[1] / self.config_parser["preprocessing"]["sr"],
             "text": data_dict["text"],
             "text_encoded": self.text_encoder.encode(data_dict["text"]),
             "audio_path": audio_path,
