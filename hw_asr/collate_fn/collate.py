@@ -2,6 +2,7 @@ import logging
 from typing import List
 
 import torch
+from numpy import dtype
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,8 @@ def collate_fn(dataset_items: List[dict]):
     text_encoded_lengths = [elem['text_encoded'].shape[1] for elem in dataset_items]
     max_text_length = max(text_encoded_lengths)
 
+    audio_paths = [elem['audio_path'] for elem in dataset_items]
+
     batch_spectrogram = torch.zeros((batch_size, spectrogram_freq, max_spec_length))
     batch_text_encoded = torch.zeros((batch_size, max_text_length))
 
@@ -32,9 +35,10 @@ def collate_fn(dataset_items: List[dict]):
         batch_text_encoded[i, :text_encoded_lengths[i]] = dataset_items[i]['text_encoded'][0]
 
     result_batch['spectrogram'] = batch_spectrogram
-    result_batch['spectrogram_length'] = torch.Tensor(lengths)
+    result_batch['spectrogram_length'] = torch.tensor(lengths, dtype=torch.long)
     result_batch['text_encoded'] = batch_text_encoded
-    result_batch['text_encoded_length'] = torch.Tensor(text_encoded_lengths)
+    result_batch['text_encoded_length'] = torch.tensor(text_encoded_lengths, dtype=torch.long)
     result_batch['text'] = texts
+    result_batch['audio_path'] = audio_paths
     
     return result_batch
