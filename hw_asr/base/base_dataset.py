@@ -23,6 +23,7 @@ class BaseDataset(Dataset):
             spec_augs=None,
             limit=None,
             max_audio_length=None,
+            min_audio_length=None,
             max_text_length=None,
     ):
         self.text_encoder = text_encoder
@@ -32,7 +33,8 @@ class BaseDataset(Dataset):
         self.log_spec = config_parser["preprocessing"].get("log_spec", None)
 
         self._assert_index_is_valid(index)
-        index = self._filter_records_from_dataset(index, max_audio_length, max_text_length, limit)
+        index = self._filter_records_from_dataset(index, max_audio_length, min_audio_length,
+                                                  max_text_length, limit)
         # it's a good idea to sort index by audio length
         # It would be easier to write length-based batch samplers later
         index = self._sort_index(index)
@@ -85,7 +87,7 @@ class BaseDataset(Dataset):
 
     @staticmethod
     def _filter_records_from_dataset(
-            index: list, max_audio_length, max_text_length, limit
+            index: list, max_audio_length, min_audio_length, max_text_length, limit
     ) -> list:
         initial_size = len(index)
         if max_audio_length is not None:
@@ -97,6 +99,16 @@ class BaseDataset(Dataset):
             )
         else:
             exceeds_audio_length = False
+
+        if min_audio_length is not None:
+            short_audio_length = np.array([el["audio_len"] for el in index]) < min_audio_length
+            _total = short_audio_length.sum()
+            logger.info(
+                f"{_total} ({_total / initial_size:.1%}) records are shorter then "
+                f"{min_audio_length} seconds. Excluding them."
+            )
+        else:
+            short_audio_length = False
 
         initial_size = len(index)
         if max_text_length is not None:
@@ -114,7 +126,7 @@ class BaseDataset(Dataset):
         else:
             exceeds_text_length = False
 
-        records_to_filter = exceeds_text_length | exceeds_audio_length
+        records_to_filter = exceeds_text_length | short_audio_length | exceeds_audio_length
 
         if records_to_filter is not False and records_to_filter.any():
             _total = records_to_filter.sum()

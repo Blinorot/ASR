@@ -8,7 +8,7 @@ from torch import is_tensor, nn
 
 class DeepSpeechV2Model(BaseModel):
     def __init__(self, n_feats, n_class, n_layers=3, fc_hidden=512,
-                n_channels=[32, 32], kernel_size=[(11, 41), (11, 41)], 
+                n_channels=[32, 32], kernel_size=[(11, 41), (11, 21)], 
                 stride=[(2, 2), (1, 2)], **batch):
         super().__init__(n_feats, n_class, **batch)
 
