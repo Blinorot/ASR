@@ -50,6 +50,7 @@ class BaseDataset(Dataset):
             "text": data_dict["text"],
             "text_encoded": self.text_encoder.encode(data_dict["text"]),
             "audio_path": audio_path,
+            "log_spec": self.log_spec,
         }
 
     @staticmethod
@@ -78,7 +79,7 @@ class BaseDataset(Dataset):
             audio_tensor_spec = wave2spec(audio_tensor_wave)
             if self.spec_augs is not None:
                 audio_tensor_spec = self.spec_augs(audio_tensor_spec)
-            if self.log_spec is not None:
+            if self.log_spec is not None and self.log_spec:
                 audio_tensor_spec = torch.log(audio_tensor_spec + 1e-5)
             return audio_tensor_wave, audio_tensor_spec
 

@@ -27,6 +27,12 @@ def collate_fn(dataset_items: List[dict]):
     audio_paths = [elem['audio_path'] for elem in dataset_items]
 
     batch_spectrogram = torch.zeros((batch_size, spectrogram_freq, max_spec_length))
+
+    log_needed = dataset_items[0]['log_spec']
+
+    if log_needed is not None and log_needed:
+        batch_spectrogram = torch.log(batch_spectrogram + 1e-5) # to simulate silence in raw wave
+
     batch_text_encoded = torch.zeros((batch_size, max_text_length))
 
     result_batch = {}
