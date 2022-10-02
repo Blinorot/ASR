@@ -1,14 +1,16 @@
 from typing import List
 
 import torch
-from torch import Tensor
-
 from hw_asr.base.base_metric import BaseMetric
 from hw_asr.base.base_text_encoder import BaseTextEncoder
 from hw_asr.metric.utils import calc_wer
+from torch import Tensor
 
 
 class ArgmaxWERMetric(BaseMetric):
+    """
+    WER Metric when predicted text is argmax of log_probs
+    """
     def __init__(self, text_encoder: BaseTextEncoder, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.text_encoder = text_encoder
