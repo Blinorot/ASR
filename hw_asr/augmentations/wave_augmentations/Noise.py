@@ -3,9 +3,9 @@ from hw_asr.augmentations.base import AugmentationBase
 from torch import Tensor
 
 
-class Gain(AugmentationBase):
+class Noise(AugmentationBase):
     def __init__(self, *args, **kwargs):
-        self._aug = torch_audiomentations.Gain(*args, **kwargs)
+        self._aug = torch_audiomentations.AddColoredNoise(*args, **kwargs)
 
     def __call__(self, data: Tensor):
         x = data.unsqueeze(1)
