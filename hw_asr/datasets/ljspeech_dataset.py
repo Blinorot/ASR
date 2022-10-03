@@ -19,12 +19,12 @@ URL_LINKS = {
 
 
 class LJspeechDataset(BaseDataset):
-    def __init__(self, data_dir=None, *args, **kwargs):
+    def __init__(self, part, data_dir=None, *args, **kwargs):
         if data_dir is None:
             data_dir = ROOT_PATH / "data" / "datasets" / "ljspeech"
             data_dir.mkdir(exist_ok=True, parents=True)
         self._data_dir = data_dir
-        index = self._get_or_load_index()
+        index = self._get_or_load_index(part)
 
         super().__init__(index, *args, **kwargs)
 
@@ -38,13 +38,25 @@ class LJspeechDataset(BaseDataset):
         os.remove(str(arch_path))
         shutil.rmtree(str(self._data_dir / "LJSpeech-1.1"))
 
-    def _get_or_load_index(self):
-        index_path = self._data_dir / "wavs_index.json"
+        files = [file_name for file_name in (self._data_dir / "wavs").iterdir()]
+        train_length = int(0.85 * len(files)) # hand split, test ~ 15% 
+        (self._data_dir / "train").mkdir(exist_ok=True, parents=True)
+        (self._data_dir / "test").mkdir(exist_ok=True, parents=True)
+        for i, fpath in enumerate((self._data_dir / "wavs").iterdir()):
+            if i < train_length:
+                shutil.move(str(fpath), str(self._data_dir / "train" / fpath.name))
+            else:
+                shutil.move(str(fpath), str(self._data_dir / "test" / fpath.name))
+        shutil.rmtree(str(self._data_dir / "wavs"))
+
+
+    def _get_or_load_index(self, part):
+        index_path = self._data_dir / f"{part}_index.json"
         if index_path.exists():
             with index_path.open() as f:
                 index = json.load(f)
         else:
-            index = self._create_index("wavs")
+            index = self._create_index(part)
             with index_path.open("w") as f:
                 json.dump(index, f, indent=2)
         return index
@@ -69,6 +81,8 @@ class LJspeechDataset(BaseDataset):
                     w_id = line.split('|')[0]
                     w_text = " ".join(line.split('|')[1:]).strip()
                     wav_path = wav_dir / f"{w_id}.wav"
+                    if not wav_path.exists(): # elem is in another part
+                        continue
                     t_info = torchaudio.info(str(wav_path))
                     length = t_info.num_frames / t_info.sample_rate
                     if w_text.isascii():
