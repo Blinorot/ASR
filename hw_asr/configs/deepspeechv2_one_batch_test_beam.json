@@ -1,5 +1,5 @@
 {
-  "name": "baseline",
+  "name": "one_batch_test",
   "n_gpu": 1,
   "preprocessing": {
     "sr": 16000,
@@ -61,66 +61,39 @@
   "data": {
     "train": {
       "batch_size": 10,
-      "num_workers": 5,
-      "datasets": [
-        {
-          "type": "LJspeechDataset",
-          "args": {
-            "part": "train",
-            "max_audio_length": 20.0,
-            "min_audio_length": 6.0,
-            "max_text_length": 200
-          }
-        }
-      ]
-    },
-    "test": {
-      "batch_size": 10,
-      "num_workers": 5,
-      "datasets": [
-        {
-          "type": "LJspeechDataset",
-          "args": {
-            "part": "test",
-            "max_audio_length": 20.0,
-            "max_text_length": 200
-          }
-        }
-      ]
-    },
-    "test-other": {
-      "batch_size": 10,
-      "num_workers": 5,
+      "num_workers": 0,
       "datasets": [
         {
           "type": "LibrispeechDataset",
           "args": {
-            "part": "test-other",
+            "part": "dev-clean",
             "max_audio_length": 20.0,
-            "max_text_length": 200
+            "max_text_length": 200,
+            "limit": 10
           }
         }
       ]
     },
-    "test-clean": {
+    "val": {
       "batch_size": 10,
-      "num_workers": 5,
+      "num_workers": 0,
       "datasets": [
         {
           "type": "LibrispeechDataset",
           "args": {
-            "part": "test-clean",
+            "part": "dev-clean",
             "max_audio_length": 20.0,
-            "max_text_length": 200
+            "max_text_length": 200,
+            "limit": 10
           }
         }
       ]
     }
   },
   "optimizer": {
-    "type": "Adam",
+    "type": "SGD",
     "args": {
-      "lr": 3e-4
+      "lr": 1e-2
     }
   },
   "loss": {
@@ -132,29 +105,29 @@
       "type": "BeamSearchWERMetric",
       "args": {
         "name": "WER (argmax)",
-        "beam_size": 10
+        "beam_size": 3
       }
     },
     {
       "type": "BeamSearchCERMetric",
       "args": {
         "name": "CER (argmax)",
-        "beam_size": 10
+        "beam_size": 3
       }
     }
   ],
   "lr_scheduler": {
     "type": "OneCycleLR",
     "args": {
-      "steps_per_epoch": 5000,
-      "epochs": 100,
+      "steps_per_epoch": 100,
+      "epochs": 50,
       "anneal_strategy": "cos",
-      "max_lr": 4e-3,
+      "max_lr": 1e-2,
       "pct_start": 0.2
     }
   },
   "trainer": {
-    "epochs": 100,
+    "epochs": 50,
     "save_dir": "saved/",
     "save_period": 5,
     "verbosity": 2,
@@ -162,8 +135,9 @@
     "early_stop": 100,
     "visualize": "wandb",
     "wandb_project": "asr_project",
-    "run_name": "LJ_train",
-    "len_epoch": 5000,
+    "run_name": "DSV2_test_beam",
+    "sample_rate": 16000,
+    "len_epoch": 100,
     "grad_norm_clip": 10
   }
 }
