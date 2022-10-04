@@ -27,6 +27,7 @@ class TestDataset(unittest.TestCase):
         config_parser = ConfigParser.get_test_configs()
         with clear_log_folder_after_use(config_parser):
             ds = LJspeechDataset(
+                "test",
                 text_encoder=config_parser.get_text_encoder(),
                 config_parser=config_parser,
                 max_text_length=140,

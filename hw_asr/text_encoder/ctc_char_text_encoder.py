@@ -30,7 +30,7 @@ class CTCCharTextEncoder(CharTextEncoder):
             if char != self.EMPTY_TOK:
                 text.append(char)
             last_char = char
-        return ''.join(text)
+        return (''.join(text)).strip()
 
     def ctc_beam_search(self, probs: torch.tensor, probs_length,
                         beam_size: int = 100) -> List[Hypothesis]:
