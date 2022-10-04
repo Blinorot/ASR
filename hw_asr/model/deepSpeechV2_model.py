@@ -26,7 +26,7 @@ class DeepSpeechV2Model(BaseModel):
         for i in range(len(kernel_size)):
             layer = nn.Sequential(
                 nn.Conv2d(n_channels[i], n_channels[i + 1], kernel_size[i], stride[i]),
-                nn.SELU(),
+                nn.ReLU(),
                 nn.BatchNorm2d(n_channels[i+1])
             )
             convs.append(layer)
