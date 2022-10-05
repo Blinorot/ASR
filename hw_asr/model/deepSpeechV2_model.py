@@ -26,7 +26,7 @@ class DeepSpeechV2Model(BaseModel):
         for i in range(len(kernel_size)):
             layer = nn.Sequential(
                 nn.Conv2d(n_channels[i], n_channels[i + 1], kernel_size[i], stride[i]),
-                nn.ReLU(),
+                nn.Hardtanh(0, 20, inplace=True),
                 nn.BatchNorm2d(n_channels[i+1])
             )
             convs.append(layer)
@@ -37,7 +37,11 @@ class DeepSpeechV2Model(BaseModel):
 
         self.rnn = nn.GRU(input_size=input_size, hidden_size=fc_hidden,
                           batch_first=True, bidirectional=True, num_layers=n_layers)
-        self.fc = nn.Linear(fc_hidden * 2, n_class)
+
+        self.fc = nn.Sequential(
+            nn.Linear(fc_hidden * 2, n_class),
+            nn.LogSoftmax(-1)
+        )
 
     def forward(self, spectrogram, **batch):
         spectrogram = torch.unsqueeze(spectrogram, 1)
