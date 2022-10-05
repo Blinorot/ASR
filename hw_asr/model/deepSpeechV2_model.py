@@ -38,10 +38,7 @@ class DeepSpeechV2Model(BaseModel):
         self.rnn = nn.GRU(input_size=input_size, hidden_size=fc_hidden,
                           batch_first=True, bidirectional=True, num_layers=n_layers)
 
-        self.fc = nn.Sequential(
-            nn.Linear(fc_hidden * 2, n_class),
-            nn.LogSoftmax(-1)
-        )
+        self.fc = nn.Linear(fc_hidden * 2, n_class)
 
     def forward(self, spectrogram, **batch):
         spectrogram = torch.unsqueeze(spectrogram, 1)
@@ -49,6 +46,12 @@ class DeepSpeechV2Model(BaseModel):
         conv_out = conv_out.view(conv_out.shape[0], conv_out.shape[2], -1)
         rnn_out, _ = self.rnn(conv_out)
         output = self.fc(rnn_out)
+
+        if self.training:
+            output = nn.functional.log_softmax(output, dim=-1)
+        else:
+            output = nn.functional.softmax(output, dim=-1)
+
         return {"logits": output}
 
     def transform_input_lengths(self, input_lengths):
