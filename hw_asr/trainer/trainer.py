@@ -1,6 +1,8 @@
+import imp
 import random
 from pathlib import Path
 from random import shuffle
+from typing import Optional
 
 import pandas as pd
 import PIL
@@ -49,7 +51,8 @@ class Trainer(BaseTrainer):
             self.len_epoch = len_epoch
         self.evaluation_dataloaders = {k: v for k, v in dataloaders.items() if k != "train"}
         self.lr_scheduler = lr_scheduler
-        self.log_step = 50
+        self.log_step = self.config["trainer"].get("log_step", 50)
+        self.batch_accum_steps = self.config["trainer"].get("batch_accum_steps", 1)
 
         self.train_metrics = MetricTracker(
             "loss", "grad norm", *[m.name for m in self.metrics], writer=self.writer
@@ -83,6 +86,7 @@ class Trainer(BaseTrainer):
         self.model.train()
         self.train_metrics.reset()
         self.writer.add_scalar("epoch", epoch)
+
         for batch_idx, batch in enumerate(
                 tqdm(self.train_dataloader, desc="train", total=self.len_epoch)
         ):
@@ -91,6 +95,8 @@ class Trainer(BaseTrainer):
                     batch,
                     is_train=True,
                     metrics=self.train_metrics,
+                    index=batch_idx,
+                    total=self.len_epoch,
                 )
             except RuntimeError as e:
                 if "out of memory" in str(e) and self.skip_oom:
@@ -131,10 +137,9 @@ class Trainer(BaseTrainer):
 
         return log
 
-    def process_batch(self, batch, is_train: bool, metrics: MetricTracker):
+    def process_batch(self, batch, is_train: bool, metrics: MetricTracker,
+                      index: Optional[int] = None, total: Optional[int] = None):
         batch = self.move_batch_to_device(batch, self.device)
-        if is_train:
-            self.optimizer.zero_grad()
         outputs = self.model(**batch)
         if type(outputs) is dict:
             batch.update(outputs)
@@ -148,8 +153,10 @@ class Trainer(BaseTrainer):
         batch["loss"] = self.criterion(**batch)
         if is_train:
             batch["loss"].backward()
-            self._clip_grad_norm()
-            self.optimizer.step()
+            if (index + 1) % self.batch_accum_steps == 0 or index + 1 == total:
+                self._clip_grad_norm()
+                self.optimizer.step()
+                self.optimizer.zero_grad()
             if self.lr_scheduler is not None:
                 self.lr_scheduler.step()
 

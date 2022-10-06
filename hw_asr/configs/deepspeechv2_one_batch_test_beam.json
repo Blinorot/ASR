@@ -6,6 +6,7 @@
     "spectrogram": {
       "type": "MelSpectrogram",
       "args": {
+        "n_mels": 128
       }
     },
     "log_spec": true
@@ -55,6 +56,7 @@
       "n_channels": [32, 32],
       "kernel_size": [[11, 41], [11, 21]],
       "stride": [[2, 2], [1, 2]],
+      "padding": [[5, 20], [5, 10]],
       "n_layers": 3
     }
   },
@@ -149,6 +151,7 @@
     "wandb_project": "asr_project",
     "run_name": "DSV2_test_beam",
     "sample_rate": 16000,
+    "batch_accum_steps": 3,
     "len_epoch": 100,
     "grad_norm_clip": 10
   }

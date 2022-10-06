@@ -11,49 +11,18 @@
     "log_spec": true
   },
   "augmentations": {
-    "wave": [
-        {
-            "type": "PitchShift",
-            "args":{
-                "p": 0.25,
-                "sample_rate": 16000
-            }
-        },
-        {
-            "type": "Gain",
-            "args": {
-                "p": 0.25,
-                "sample_rate": 16000
-            }
-        }
-    ],
-    "spectrogram": [
-        {
-            "type": "TimeStretch",
-            "args": {
-                "p": 0.25,
-                "min_stretch": 0.5,
-                "max_stretch": 1.1,
-                "n_freq": 128
-            }
-        },
-        {
-            "type": "FrequencyMasking",
-            "args": {
-                "p": 0.25,
-                "freq_mask_param": 20
-            }
-        }
-    ]
+    "wave": [],
+    "spectrogram": []
   },
   "arch": {
     "type": "DeepSpeechV2Model",
     "args": {
       "n_feats": 128,
-      "fc_hidden": 800,
+      "fc_hidden": 512,
       "n_channels": [32, 32],
       "kernel_size": [[11, 41], [11, 21]],
       "stride": [[2, 2], [1, 2]],
+      "padding": [[5, 20], [5, 10]],
       "n_layers": 5
     }
   },
@@ -67,7 +36,7 @@
             "args": {
               "part": "train-clean-100",
               "max_audio_length": 16.5,
-              "max_text_length": 200
+              "max_text_length": 250
             }
           },
           {
@@ -75,7 +44,7 @@
             "args": {
               "part": "train-clean-360",
               "max_audio_length": 16.5,
-              "max_text_length": 200
+              "max_text_length": 250
             }
           }
         ]
@@ -93,7 +62,7 @@
         ]
     },
     "test-clean": {
-        "batch_size": 40,
+        "batch_size": 30,
         "num_workers": 5,
         "datasets": [
           {
@@ -106,10 +75,9 @@
     }
   },
   "optimizer": {
-    "type": "AdamW",
+    "type": "Adam",
     "args": {
-      "lr": 3e-4,
-      "weight_decay": 1e-4
+      "lr": 3e-4
     }
   },
   "loss": {
@@ -145,13 +113,10 @@
     }
   ],
   "lr_scheduler": {
-    "type": "OneCycleLR",
+    "type": "StepLR",
     "args": {
-      "steps_per_epoch": 150,
-      "epochs": 50,
-      "anneal_strategy": "cos",
-      "max_lr": 5e-4,
-      "pct_start": 0.2
+      "step_size": 300,
+      "gamma": 0.5
     }
   },
   "trainer": {
@@ -163,9 +128,10 @@
     "early_stop": 50,
     "visualize": "wandb",
     "wandb_project": "asr_project",
-    "run_name": "LJ_train",
+    "run_name": "Libri_train",
     "sample_rate": 16000,
-    "len_epoch": 150,
-    "grad_norm_clip": 10
+    "len_epoch": 100,
+    "grad_norm_clip": 10,
+    "batch_accum_steps": 3
   }
 }

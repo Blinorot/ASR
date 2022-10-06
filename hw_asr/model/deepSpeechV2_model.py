@@ -41,7 +41,8 @@ class LayerNormBiGRU(nn.Module):
 class DeepSpeechV2Model(BaseModel):
     def __init__(self, n_feats, n_class, n_layers=3, fc_hidden=512,
                 n_channels=[32, 32], kernel_size=[(11, 41), (11, 21)], 
-                stride=[(2, 2), (1, 2)], **batch):
+                stride=[(2, 2), (1, 2)], 
+                padding=[(5, 20), (5, 10)], **batch):
         super().__init__(n_feats, n_class, **batch)
 
         assert len(n_channels) == len(kernel_size)
@@ -52,12 +53,13 @@ class DeepSpeechV2Model(BaseModel):
         self.n_channels = n_channels
         self.kernel_size = kernel_size
         self.stride = stride
+        self.padding = padding
 
         convs = []
 
         for i in range(len(kernel_size)):
             layer = nn.Sequential(
-                nn.Conv2d(n_channels[i], n_channels[i + 1], kernel_size[i], stride[i]),
+                nn.Conv2d(n_channels[i], n_channels[i + 1], kernel_size[i], stride[i], padding[i]),
                 nn.Hardtanh(0, 20, inplace=True),
                 nn.BatchNorm2d(n_channels[i+1])
             )
@@ -91,7 +93,8 @@ class DeepSpeechV2Model(BaseModel):
 
     def _compute_shapes_after_convs(self, input_size, index):
         for i in range(len(self.kernel_size)):
-            numerator = input_size - (self.kernel_size[i][index] - 1) - 1
+
+            numerator = input_size + 2 * self.padding[i][index] - (self.kernel_size[i][index] - 1) - 1
             denominator = self.stride[i][index]
             if torch.is_tensor(input_size):
                 input_size = torch.floor(numerator / denominator + 1).to(int)
