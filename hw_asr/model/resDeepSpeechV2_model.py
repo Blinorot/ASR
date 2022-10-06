@@ -44,9 +44,9 @@ class ResDeepSpeechV2Model(BaseModel):
         super().__init__(n_feats, n_class, **batch)
 
         self.n_channels = n_channels
-        self.kernel_size = [(3, 3)] * (len(n_channels) + 2)
-        self.stride = [(2, 2)] + [(1, 1)] * len(n_channels) + [(2, 2)] 
-        self.padding = [(1, 1)] * (len(n_channels) + 2)
+        self.kernel_size = [(3, 3)] * (len(n_channels) + 1)
+        self.stride = [(2, 2)] + [(1, 1)] * len(n_channels)
+        self.padding = [(1, 1)] * (len(n_channels) + 1)
 
         self.first_conv = nn.Sequential(
             nn.Conv2d(1, n_channels[0], 3, 2, 1),
@@ -56,7 +56,7 @@ class ResDeepSpeechV2Model(BaseModel):
 
         convs = []
 
-        for i in range(len(n_channels) - 2):
+        for i in range(len(n_channels) - 1):
             layer = nn.Sequential(
                 nn.Conv2d(n_channels[i], n_channels[i + 1], 3, 1, 1),
                 nn.Hardtanh(0, 20, inplace=True),
@@ -66,13 +66,13 @@ class ResDeepSpeechV2Model(BaseModel):
         
         self.convs = nn.ModuleList(convs)
 
-        self.out_conv = nn.Sequential(
-            nn.Conv2d(n_channels[-2], n_channels[-1], 3, 2, 1),
-            nn.Hardtanh(0, 20, inplace=True),
-            nn.BatchNorm2d(n_channels[0])
+        self.out_nin = nn.Sequential(
+            nn.Linear(n_feats // 2, n_feats // 8),
+            nn.ReLU(),
+            nn.BatchNorm2d(n_channels[-1])
         )
 
-        input_size = n_feats // 4 * n_channels[-1]
+        input_size = n_feats // 8 * n_channels[-1]
 
         self.rnn = LayerNormBiGRU(input_size=input_size, hidden_size=fc_hidden,
                                   num_layers=n_layers)
@@ -86,7 +86,7 @@ class ResDeepSpeechV2Model(BaseModel):
             new_conv_out = self.convs[i](conv_out)
             conv_out = new_conv_out + conv_out
 
-        conv_out = self.out_conv(conv_out)
+        conv_out = self.out_nin(conv_out)
         
         conv_out = conv_out.view(conv_out.shape[0], conv_out.shape[2], -1)
         rnn_out = self.rnn(conv_out)

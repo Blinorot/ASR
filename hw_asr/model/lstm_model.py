@@ -7,7 +7,7 @@ class LSTMModel(BaseModel):
     def __init__(self, n_feats, n_class, n_layers=10, fc_hidden=512, **batch):
         super().__init__(n_feats, n_class, **batch)
         self.net = nn.LSTM(input_size=n_feats, hidden_size=fc_hidden,
-                           num_layers=n_layers, batch_first=True)
+                           num_layers=n_layers, batch_first=True, bidirectional=True)
         self.fc = nn.Linear(fc_hidden, n_class)
 
     def forward(self, spectrogram, **batch):
