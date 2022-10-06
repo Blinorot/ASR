@@ -112,7 +112,7 @@
   "lr_scheduler": {
     "type": "StepLR",
     "args": {
-      "step_size": 300,
+      "step_size": 900,
       "gamma": 0.5
     }
   },
@@ -127,7 +127,7 @@
     "wandb_project": "asr_project",
     "run_name": "Libri_train",
     "sample_rate": 16000,
-    "len_epoch": 100,
+    "len_epoch": 300,
     "grad_norm_clip": 10,
     "batch_accum_steps": 3
   }
