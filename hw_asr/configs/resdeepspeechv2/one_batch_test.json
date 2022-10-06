@@ -19,8 +19,8 @@
     "args": {
       "n_feats": 128,
       "fc_hidden": 512,
-      "n_channels": [32, 32, 32],
-      "n_layers": 3
+      "n_channels": [32, 32, 32, 32],
+      "n_layers": 2
     }
   },
   "data": {
