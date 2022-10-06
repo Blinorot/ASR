@@ -1,10 +1,42 @@
 from math import floor
+from turtle import forward
 from unicodedata import bidirectional
 
 import torch
 from hw_asr.base import BaseModel
-from torch import is_tensor, nn
+from torch import is_tensor, layer_norm, nn
 
+
+class LayerNormBiGRU(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers):
+        super().__init__()
+
+        self.first_GRU = nn.GRU(input_size=input_size, hidden_size=hidden_size,
+                                batch_first=True, bidirectional=True, num_layers=1)
+        other_GRU = []
+        layer_norms = []
+        for i in range(num_layers - 1):
+            other_GRU.append(nn.GRU(input_size=hidden_size, hidden_size=hidden_size,
+                                    batch_first=True, bidirectional=True, num_layers=1))
+            layer_norms.append(nn.LayerNorm(hidden_size))
+        self.other_GRU = nn.ModuleList(other_GRU)
+        self.layer_norms = nn.ModuleList(layer_norms)
+
+    def forward(self, input):
+        output, h_n = self.first_GRU(input)
+        output = self._convert_bi_output_to_uni(output)
+        for i in range(len(self.other_GRU)):
+            output = self.layer_norms[i](output)
+            output, h_n = self.other_GRU[i](output, h_n)
+            output = self._convert_bi_output_to_uni(output)
+        return output
+        
+    def _convert_bi_output_to_uni(self, output):
+        output = output.view(output.shape[0], output.shape[1], 2, -1)
+        output = output.sum(dim=2)
+        output = output.view(output.shape[0], output.shape[1], -1)
+        return output
+        
 
 class DeepSpeechV2Model(BaseModel):
     def __init__(self, n_feats, n_class, n_layers=3, fc_hidden=512,
@@ -35,21 +67,19 @@ class DeepSpeechV2Model(BaseModel):
 
         input_size = self._compute_shapes_after_convs(n_feats, index=1) * n_channels[-1]
 
-        self.rnn = nn.GRU(input_size=input_size, hidden_size=fc_hidden,
-                          batch_first=True, bidirectional=True, num_layers=n_layers)
+        self.rnn = LayerNormBiGRU(input_size=input_size, hidden_size=fc_hidden,
+                                  num_layers=n_layers)
 
-        self.fc = nn.Linear(fc_hidden * 2, n_class)
+        self.fc = nn.Linear(fc_hidden, n_class)
 
     def forward(self, spectrogram, **batch):
         spectrogram = torch.unsqueeze(spectrogram, 1)
         conv_out = self.convs(spectrogram.transpose(2, 3))
         conv_out = conv_out.view(conv_out.shape[0], conv_out.shape[2], -1)
-        rnn_out, _ = self.rnn(conv_out)
+        rnn_out = self.rnn(conv_out)
         output = self.fc(rnn_out)
 
-        if self.training:
-            output = nn.functional.log_softmax(output, dim=-1)
-        else:
+        if not self.training:
             output = nn.functional.softmax(output, dim=-1)
 
         return {"logits": output}
