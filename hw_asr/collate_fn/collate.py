@@ -14,7 +14,6 @@ def collate_fn(dataset_items: List[dict]):
 
     batch_size = len(dataset_items)
     channels = dataset_items[0]['spectrogram'].shape[0]
-    assert channels == 1
 
     spectrogram_freq = dataset_items[0]['spectrogram'].shape[1]
     lengths = [elem['spectrogram'].shape[2] for elem in dataset_items]

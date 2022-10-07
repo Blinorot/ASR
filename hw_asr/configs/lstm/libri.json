@@ -6,6 +6,8 @@
     "spectrogram": {
       "type": "MelSpectrogram",
       "args": {
+            "n_fft": 512,
+            "n_mels": 256
       }
     },
     "log_spec": true
@@ -17,14 +19,14 @@
   "arch": {
     "type": "LSTMModel",
     "args": {
-      "n_feats": 128,
+      "n_feats": 256,
       "fc_hidden": 512,
       "n_layers": 4
     }
   },
   "data": {
     "train": {
-        "batch_size": 30,
+        "batch_size": 20,
         "num_workers": 5,
         "datasets": [
           {
@@ -46,7 +48,7 @@
         ]
     },
     "val": {
-        "batch_size": 30,
+        "batch_size": 20,
         "num_workers": 5,
         "datasets": [
           {
@@ -58,7 +60,7 @@
         ]
     },
     "test-clean": {
-        "batch_size": 30,
+        "batch_size": 20,
         "num_workers": 5,
         "datasets": [
           {

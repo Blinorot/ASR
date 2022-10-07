@@ -66,8 +66,12 @@ class BaseDataset(Dataset):
         audio_tensor, sr = torchaudio.load(path)
         audio_tensor = audio_tensor[0:1, :]  # remove all channels but the first
         target_sr = self.config_parser["preprocessing"]["sr"]
+
         if sr != target_sr:
             audio_tensor = torchaudio.functional.resample(audio_tensor, sr, target_sr)
+
+        audio_tensor = audio_tensor / max(abs(audio_tensor.max()), abs(audio_tensor.min()))
+        
         return audio_tensor
 
     def process_wave(self, audio_tensor_wave: Tensor):

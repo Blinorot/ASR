@@ -6,6 +6,8 @@
     "spectrogram": {
       "type": "MelSpectrogram",
       "args": {
+            "n_fft": 512,
+            "n_mels": 256
       }
     },
     "log_spec": true
@@ -17,7 +19,7 @@
   "arch": {
     "type": "ResDeepSpeechV2Model",
     "args": {
-      "n_feats": 128,
+      "n_feats": 256,
       "fc_hidden": 512,
       "n_channels": [32, 32, 32],
       "n_layers": 3

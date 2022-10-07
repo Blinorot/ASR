@@ -41,7 +41,7 @@ class LSTMModel(BaseModel):
         self.fc = nn.Linear(fc_hidden, n_class)
 
     def forward(self, spectrogram, **batch):
-        output, _ = self.net(spectrogram.transpose(1, 2))
+        output = self.net(spectrogram.transpose(1, 2))
         output = self.fc(output)
         return {"logits": output}
 
