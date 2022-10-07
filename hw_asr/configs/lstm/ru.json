@@ -1,5 +1,5 @@
 {
-  "name": "lstm",
+  "name": "ru_lstm",
   "n_gpu": 1,
   "preprocessing": {
     "sr": 16000,
@@ -91,8 +91,19 @@
   "lr_scheduler": {
     "type": "StepLR",
     "args": {
-      "step_size": 900,
+      "step_size": 2700,
       "gamma": 0.5
+    }
+  },
+  "text_encoder": {
+    "type": "CTCCharTextEncoder",
+    "args": {
+        "alphabet": [
+            "а", "б", "в", "г", "д", "е", "ё", "ж", "з", "и", "й", "к",
+            "л", "м", "н", "о", "п", "р", "с", "т", "у", "ф", "х", "ц",
+            "ч", "ш", "щ", "ъ", "ы", "ь", "э", "ю", "я", " "
+        ],
+        "lng": "ru"
     }
   },
   "trainer": {
