@@ -30,17 +30,9 @@
         "num_workers": 5,
         "datasets": [
           {
-            "type": "LibrispeechDataset",
+            "type": "RuCommonVoiceDataset",
             "args": {
-              "part": "train-clean-100",
-              "max_audio_length": 16.5,
-              "max_text_length": 250
-            }
-          },
-          {
-            "type": "LibrispeechDataset",
-            "args": {
-              "part": "train-clean-360",
+              "part": "train",
               "max_audio_length": 16.5,
               "max_text_length": 250
             }
@@ -52,9 +44,9 @@
         "num_workers": 5,
         "datasets": [
           {
-            "type": "LibrispeechDataset",
+            "type": "RuCommonVoiceDataset",
             "args": {
-              "part": "dev-clean"
+              "part": "dev"
             }
           }
         ]
@@ -64,9 +56,9 @@
         "num_workers": 5,
         "datasets": [
           {
-            "type": "LibrispeechDataset",
+            "type": "RuCommonVoiceDataset",
             "args": {
-              "part": "test-clean"
+              "part": "test"
             }
           }
         ]
