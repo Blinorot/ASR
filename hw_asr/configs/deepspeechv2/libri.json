@@ -1,11 +1,13 @@
 {
-  "name": "deepspeech",
+  "name": "deepspeechv2",
   "n_gpu": 1,
   "preprocessing": {
     "sr": 16000,
     "spectrogram": {
       "type": "MelSpectrogram",
       "args": {
+            "n_fft": 512,
+            "n_mels": 256
       }
     },
     "log_spec": true
@@ -28,7 +30,7 @@
   },
   "data": {
     "train": {
-        "batch_size": 30,
+        "batch_size": 20,
         "num_workers": 5,
         "datasets": [
           {
@@ -50,7 +52,7 @@
         ]
     },
     "val": {
-        "batch_size": 30,
+        "batch_size": 20,
         "num_workers": 5,
         "datasets": [
           {
@@ -62,7 +64,7 @@
         ]
     },
     "test-clean": {
-        "batch_size": 30,
+        "batch_size": 20,
         "num_workers": 5,
         "datasets": [
           {
@@ -96,26 +98,12 @@
         "args": {
           "name": "CER (argmax)"
         }
-    },
-    {
-      "type": "BeamSearchWERMetric",
-      "args": {
-        "name": "WER (beam)",
-        "beam_size": 3
-      }
-    },
-    {
-      "type": "BeamSearchCERMetric",
-      "args": {
-        "name": "CER (beam)",
-        "beam_size": 3
-      }
     }
   ],
   "lr_scheduler": {
     "type": "StepLR",
     "args": {
-      "step_size": 900,
+      "step_size": 2700,
       "gamma": 0.5
     }
   },
