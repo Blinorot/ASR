@@ -16,8 +16,8 @@ class Hypothesis(NamedTuple):
 class CTCCharTextEncoder(CharTextEncoder):
     EMPTY_TOK = "^"
 
-    def __init__(self, alphabet: List[str] = None):
-        super().__init__(alphabet)
+    def __init__(self, alphabet: List[str] = None, lng: str = "en"):
+        super().__init__(alphabet, lng)
         vocab = [self.EMPTY_TOK] + list(self.alphabet)
         self.ind2char = dict(enumerate(vocab))
         self.char2ind = {v: k for k, v in self.ind2char.items()}

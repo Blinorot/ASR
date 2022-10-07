@@ -19,7 +19,12 @@ class BaseTextEncoder:
         raise NotImplementedError()
 
     @staticmethod
-    def normalize_text(text: str):
+    def normalize_text(text: str, lng="en"):
         text = text.lower()
-        text = re.sub(r"[^a-z ]", "", text)
+        if lng == "en":
+            text = re.sub(r"[^a-z ]", "", text)
+        elif lng == "ru":
+            text = re.sub(r"[^а-я ]", "", text)
+        else:
+            raise NotImplementedError()
         return text

@@ -21,7 +21,7 @@ class ArgmaxCERMetric(BaseMetric):
         predictions = torch.argmax(log_probs.cpu(), dim=-1).numpy()
         lengths = log_probs_length.detach().numpy()
         for log_prob_vec, length, target_text in zip(predictions, lengths, text):
-            target_text = BaseTextEncoder.normalize_text(target_text)
+            target_text = self.text_encoder.normalize_text(target_text, self.text_encoder.lng)
             if hasattr(self.text_encoder, "ctc_decode"):
                 pred_text = self.text_encoder.ctc_decode(log_prob_vec[:length])
             else:
@@ -49,7 +49,7 @@ class BeamSearchCERMetric(BaseMetric):
         predictions = log_probs.detach().cpu().numpy()
         lengths = log_probs_length.detach().numpy()
         for log_prob_vec, length, target_text in zip(predictions, lengths, text):
-            target_text = BaseTextEncoder.normalize_text(target_text)
+            target_text = self.text_encoder.normalize_text(target_text, self.text_encoder.lng)
 
             if not self.use_lm:
                 if hasattr(self.text_encoder, "ctc_beam_search"):

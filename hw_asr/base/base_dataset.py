@@ -1,5 +1,6 @@
 import logging
 import random
+from pathlib import Path
 from typing import List
 
 import numpy as np
@@ -34,7 +35,7 @@ class BaseDataset(Dataset):
 
         self._assert_index_is_valid(index)
         index = self._filter_records_from_dataset(index, max_audio_length, min_audio_length,
-                                                  max_text_length, limit)
+                                                  max_text_length, limit, self.text_encoder.lng)
         # it's a good idea to sort index by audio length
         # It would be easier to write length-based batch samplers later
         index = self._sort_index(index)
@@ -63,6 +64,8 @@ class BaseDataset(Dataset):
         return len(self._index)
 
     def load_audio(self, path):
+        if Path(path).suffix == '.mp3':
+            torchaudio.set_audio_backend('sox_io') # unix only support
         audio_tensor, sr = torchaudio.load(path)
         audio_tensor = audio_tensor[0:1, :]  # remove all channels but the first
         target_sr = self.config_parser["preprocessing"]["sr"]
@@ -91,7 +94,7 @@ class BaseDataset(Dataset):
 
     @staticmethod
     def _filter_records_from_dataset(
-            index: list, max_audio_length, min_audio_length, max_text_length, limit
+            index: list, max_audio_length, min_audio_length, max_text_length, limit, lng="en"
     ) -> list:
         initial_size = len(index)
         if max_audio_length is not None:
@@ -118,7 +121,7 @@ class BaseDataset(Dataset):
         if max_text_length is not None:
             exceeds_text_length = (
                     np.array(
-                        [len(BaseTextEncoder.normalize_text(el["text"])) for el in index]
+                        [len(BaseTextEncoder.normalize_text(el["text"], lng)) for el in index]
                     )
                     >= max_text_length
             )

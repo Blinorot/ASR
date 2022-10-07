@@ -236,7 +236,7 @@ class Trainer(BaseTrainer):
         shuffle(tuples)
         rows = {}
         for beam_pred, pred, target, raw_pred, audio_path in tuples[:examples_to_log]:
-            target = BaseTextEncoder.normalize_text(target)
+            target = self.text_encoder.normalize_text(target, self.text_encoder.lng)
             wer = calc_wer(target, pred) * 100
             cer = calc_cer(target, pred) * 100
 

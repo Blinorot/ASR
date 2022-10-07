@@ -1,0 +1,118 @@
+{
+  "name": "one_batch_test",
+  "n_gpu": 1,
+  "preprocessing": {
+    "sr": 16000,
+    "spectrogram": {
+      "type": "MelSpectrogram",
+      "args": {
+            "n_fft": 512,
+            "n_mels": 256
+      }
+    },
+    "log_spec": true
+  },
+  "augmentations": {
+    "wave": [],
+    "spectrogram": []
+  },
+  "arch": {
+    "type": "ResDeepSpeechV2Model",
+    "args": {
+      "n_feats": 256,
+      "fc_hidden": 512,
+      "n_channels": [32, 32, 32],
+      "n_layers": 3
+    }
+  },
+  "data": {
+    "train": {
+      "batch_size": 10,
+      "num_workers": 0,
+      "datasets": [
+        {
+          "type": "RuCommonVoiceDataset",
+          "args": {
+            "part": "dev",
+            "max_audio_length": 20.0,
+            "max_text_length": 200,
+            "limit": 10
+          }
+        }
+      ]
+    },
+    "val": {
+      "batch_size": 10,
+      "num_workers": 0,
+      "datasets": [
+        {
+          "type": "RuCommonVoiceDataset",
+          "args": {
+            "part": "dev",
+            "max_audio_length": 20.0,
+            "max_text_length": 200,
+            "limit": 10
+          }
+        }
+      ]
+    }
+  },
+  "optimizer": {
+    "type": "SGD",
+    "args": {
+      "lr": 1e-2
+    }
+  },
+  "loss": {
+    "type": "CTCLoss",
+    "args": {}
+  },
+  "metrics": [
+    {
+      "type": "ArgmaxWERMetric",
+      "args": {
+        "name": "WER (argmax)"
+      }
+    },
+    {
+      "type": "ArgmaxCERMetric",
+      "args": {
+        "name": "CER (argmax)"
+      }
+    }
+  ],
+  "lr_scheduler": {
+    "type": "OneCycleLR",
+    "args": {
+      "steps_per_epoch": 100,
+      "epochs": 50,
+      "anneal_strategy": "cos",
+      "max_lr": 1e-2,
+      "pct_start": 0.2
+    }
+  },
+  "text_encoder": {
+        "type": "CTCCharTextEncoder",
+        "args": {
+            "alphabet": [
+                "а", "б", "в", "г", "д", "е", "ё", "ж", "з", "и", "й", "к",
+                "л", "м", "н", "о", "п", "р", "с", "т", "у", "ф", "х", "ц",
+                "ч", "ш", "щ", "ъ", "ы", "ь", "э", "ю", "я", " "
+            ],
+            "lng": "ru"
+        }
+  },
+  "trainer": {
+    "epochs": 50,
+    "save_dir": "saved/",
+    "save_period": 5,
+    "verbosity": 2,
+    "monitor": "min val_loss",
+    "early_stop": 100,
+    "visualize": "wandb",
+    "wandb_project": "asr_project",
+    "len_epoch": 100,
+    "sample_rate": 16000,
+    "grad_norm_clip": 10
+  }
+}

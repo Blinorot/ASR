@@ -4,17 +4,17 @@ from string import ascii_lowercase
 from typing import List, Union
 
 import numpy as np
-from torch import Tensor
-
 from hw_asr.base.base_text_encoder import BaseTextEncoder
+from torch import Tensor
 
 
 class CharTextEncoder(BaseTextEncoder):
 
-    def __init__(self, alphabet: List[str] = None):
+    def __init__(self, alphabet: List[str] = None, lng: str = "en"):
         if alphabet is None:
-            alphabet = list(ascii_lowercase + ' ')
+            alphabet = list(ascii_lowercase + ' ')        
         self.alphabet = alphabet
+        self.lng = lng
         self.ind2char = {k: v for k, v in enumerate(sorted(alphabet))}
         self.char2ind = {v: k for k, v in self.ind2char.items()}
 
@@ -26,7 +26,7 @@ class CharTextEncoder(BaseTextEncoder):
         return self.ind2char[item]
 
     def encode(self, text) -> Tensor:
-        text = self.normalize_text(text)
+        text = self.normalize_text(text, self.lng)
         try:
             return Tensor([self.char2ind[char] for char in text]).unsqueeze(0)
         except KeyError as e:
