@@ -1,5 +1,5 @@
 {
-  "name": "lstm",
+  "name": "lstm_en",
   "n_gpu": 1,
   "preprocessing": {
     "sr": 16000,
@@ -112,7 +112,7 @@
     "early_stop": 50,
     "visualize": "wandb",
     "wandb_project": "asr_project",
-    "run_name": "Libri_train",
+    "run_name": "Libri_train_LSTM",
     "sample_rate": 16000,
     "len_epoch": 300,
     "grad_norm_clip": 10,

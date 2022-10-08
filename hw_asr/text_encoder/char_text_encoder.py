@@ -12,7 +12,7 @@ class CharTextEncoder(BaseTextEncoder):
 
     def __init__(self, alphabet: List[str] = None, lng: str = "en"):
         if alphabet is None:
-            alphabet = list(ascii_lowercase + ' ')        
+            alphabet = list(ascii_lowercase + " " + "|" + "'")        
         self.alphabet = alphabet
         self.lng = lng
         self.ind2char = {k: v for k, v in enumerate(sorted(alphabet))}

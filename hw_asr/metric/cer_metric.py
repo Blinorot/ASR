@@ -40,31 +40,33 @@ class BeamSearchCERMetric(BaseMetric):
         self.text_encoder = text_encoder
         self.beam_size = beam_size
         self.use_lm = use_lm
-        if self.use_lm:
-            self.lm_a = kwargs['lm_a']
-            self.lm_b = kwargs['lm_b']
 
     def __call__(self, log_probs: Tensor, log_probs_length: Tensor, text: List[str], **kwargs):
         cers = []
+
+        if self.use_lm:
+            if hasattr(self.text_encoder, "ctc_lm_beam_search"):
+                log_probs = torch.nn.functional.log_softmax(log_probs.detach().cpu(), -1)
+                log_probs_length = log_probs_length.detach().cpu()
+                hypos = self.text_encoder.ctc_lm_beam_search(log_probs, log_probs_length,
+                                                             self.beam_size)
+                for best_hypos, target_text in zip(hypos, text):
+                    pred_text =  " ".join(best_hypos[0].words).strip()
+                    cers.append(calc_cer(target_text, pred_text))
+                return sum(cers) / len(cers)
+            else:
+                raise NotImplementedError()
+
         predictions = log_probs.detach().cpu().numpy()
         lengths = log_probs_length.detach().numpy()
         for log_prob_vec, length, target_text in zip(predictions, lengths, text):
             target_text = self.text_encoder.normalize_text(target_text, self.text_encoder.lng)
 
-            if not self.use_lm:
-                if hasattr(self.text_encoder, "ctc_beam_search"):
-                    hypos = self.text_encoder.ctc_beam_search(log_prob_vec[:length], self.beam_size)
-                    pred_text = hypos[0].text
-                else:
-                    raise NotImplementedError()
+            if hasattr(self.text_encoder, "ctc_beam_search"):
+                hypos = self.text_encoder.ctc_beam_search(log_prob_vec[:length], self.beam_size)
+                pred_text = hypos[0].text
             else:
-                if hasattr(self.text_encoder, "ctc_lm_beam_search"):
-                    hypos = self.text_encoder.ctc_lm_beam_search(log_prob_vec[:length],
-                                                                 self.beam_size,
-                                                                 self.lm_a, self.lm_b)
-                    pred_text = hypos[0].text
-                else:
-                    raise NotImplementedError()
+                raise NotImplementedError()                
 
             cers.append(calc_cer(target_text, pred_text))
         return sum(cers) / len(cers)

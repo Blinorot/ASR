@@ -39,9 +39,6 @@ class BeamSearchWERMetric(BaseMetric):
         self.text_encoder = text_encoder
         self.beam_size = beam_size
         self.use_lm = use_lm
-        if self.use_lm:
-            self.lm_a = kwargs['lm_a']
-            self.lm_b = kwargs['lm_b']
 
     def __call__(self, log_probs: Tensor, log_probs_length: Tensor, text: List[str], **kwargs):
         wers = []
@@ -59,9 +56,8 @@ class BeamSearchWERMetric(BaseMetric):
             else:
                 if hasattr(self.text_encoder, "ctc_lm_beam_search"):
                     hypos = self.text_encoder.ctc_lm_beam_search(log_prob_vec[:length],
-                                                                 self.beam_size,
-                                                                 self.lm_a, self.lm_b)
-                    pred_text = hypos[0].text
+                                                                 self.beam_size)
+                    pred_text = " ".join(hypos[0][0].words).strip()
                 else:
                     raise NotImplementedError()
                 

@@ -1,5 +1,5 @@
 {
-  "name": "deepspeechv2",
+  "name": "one_batch_test",
   "n_gpu": 1,
   "preprocessing": {
     "sr": 16000,
@@ -11,51 +11,14 @@
     "log_spec": true
   },
   "augmentations": {
-    "wave": [
-        {
-            "type": "PitchShift",
-            "args":{
-                "p": 0.2,
-                "sample_rate": 16000
-            }
-        },
-        {
-            "type": "Noise",
-            "args": {
-                "p": 0.2,
-                "max_snr_in_db": 20,
-                "sample_rate": 16000
-            }
-        }
-    ],
-    "spectrogram": [
-        {
-            "type": "TimeStretch",
-            "args": {
-                "p": 0.2,
-                "min_stretch": 0.5,
-                "max_stretch": 1.1,
-                "n_freq": 128
-            }
-        },
-        {
-            "type": "FrequencyMasking",
-            "args": {
-                "p": 0.4,
-                "freq_mask_param": 40
-            }
-        }
-    ]
+    "wave": [],
+    "spectrogram": []
   },
   "arch": {
-    "type": "DeepSpeechV2Model",
+    "type": "BaselineModel",
     "args": {
       "n_feats": 128,
-      "fc_hidden": 512,
-      "n_channels": [32, 32],
-      "kernel_size": [[11, 41], [11, 21]],
-      "stride": [[2, 2], [1, 2]],
-      "n_layers": 3
+      "fc_hidden": 512
     }
   },
   "data": {
@@ -124,6 +87,12 @@
       "pct_start": 0.2
     }
   },
+  "text_encoder": {
+    "type": "CTCCharTextEncoder",
+    "args": {
+        "use_bpe": true
+    }
+},
   "trainer": {
     "epochs": 50,
     "save_dir": "saved/",
@@ -133,9 +102,8 @@
     "early_stop": 100,
     "visualize": "wandb",
     "wandb_project": "asr_project",
-    "run_name": "DSV2_test_aug2",
-    "sample_rate": 16000,
     "len_epoch": 100,
+    "sample_rate": 16000,
     "grad_norm_clip": 10
   }
 }

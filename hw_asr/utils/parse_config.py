@@ -3,7 +3,7 @@ import json
 import logging
 import os
 from datetime import datetime
-from functools import reduce, partial
+from functools import partial, reduce
 from operator import getitem
 from pathlib import Path
 
@@ -11,7 +11,7 @@ from hw_asr import text_encoder as text_encoder_module
 from hw_asr.base.base_text_encoder import BaseTextEncoder
 from hw_asr.logger import setup_logging
 from hw_asr.text_encoder import CTCCharTextEncoder
-from hw_asr.utils import read_json, write_json, ROOT_PATH
+from hw_asr.utils import ROOT_PATH, read_json, write_json
 
 
 class ConfigParser:

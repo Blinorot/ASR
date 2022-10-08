@@ -19,7 +19,7 @@
   "arch": {
     "type": "DeepSpeechV2Model",
     "args": {
-      "n_feats": 128,
+      "n_feats": 256,
       "fc_hidden": 512,
       "n_channels": [32, 32],
       "kernel_size": [[11, 41], [11, 21]],
