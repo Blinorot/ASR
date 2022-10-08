@@ -145,13 +145,18 @@ class BaseTrainer:
             "config": self.config,
         }
         filename = str(self.checkpoint_dir / "checkpoint-epoch{}.pth".format(epoch))
+        filename_only_dict = str(self.checkpoint_dir / "dict_checkpoint-epoch{}.pth".format(epoch))
         if not (only_best and save_best):
-            torch.save(state, filename)
+            torch.save(state, filename, _use_new_zipfile_serialization=False)
+            torch.save(self.model.state_dict(), filename_only_dict, _use_new_zipfile_serialization=False)
             self.logger.info("Saving checkpoint: {} ...".format(filename))
         if save_best:
             best_path = str(self.checkpoint_dir / "model_best.pth")
-            torch.save(state, best_path)
+            best_path_only_dict = str(self.checkpoint_dir / "dict_model_best.pth")
+            torch.save(state, best_path, _use_new_zipfile_serialization=False)
+            torch.save(self.model.state_dict(), best_path_only_dict, _use_new_zipfile_serialization=False)
             self.logger.info("Saving current best: model_best.pth ...")
+        
 
     def _resume_checkpoint(self, resume_path):
         """
