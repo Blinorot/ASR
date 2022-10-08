@@ -92,7 +92,7 @@
     "args": {
         "use_bpe": true
     }
-},
+  },
   "trainer": {
     "epochs": 50,
     "save_dir": "saved/",
