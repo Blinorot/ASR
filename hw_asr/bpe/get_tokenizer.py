@@ -1,4 +1,5 @@
 import argparse
+import gzip
 import os
 import shutil
 from pathlib import Path
@@ -19,12 +20,15 @@ def main(args):
     data_dir.mkdir(exist_ok=True, parents=True)
 
     arc_path = data_dir / "librispeech-lm-norm.txt.gz"
-    txt_path = data_dir / "librispeech-vocab.txt"
+    txt_path = data_dir / "librispeech-lm-norm.txt"
 
     if not txt_path.exists():
         print("Loading vocabulary")
-        download_file(URL_LINKS["vocabulary"], dest=arc_path)
-        shutil.unpack_archive(arc_path, data_dir)
+        if not arc_path.exists():
+            download_file(URL_LINKS["vocabulary"], dest=arc_path)
+        with gzip.open(str(arc_path), 'rb') as f_in:
+            with open(str(txt_path), 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
         os.remove(arc_path)
     
     tokenizer = Tokenizer(BPE(unk_token="[UNK]"))
