@@ -47,10 +47,9 @@ class BeamSearchWERMetric(BaseMetric):
             if hasattr(self.text_encoder, "ctc_lm_beam_search"):
                 log_probs = torch.nn.functional.log_softmax(log_probs.detach().cpu(), -1)
                 log_probs_length = log_probs_length.detach().cpu()
-                hypos = self.text_encoder.ctc_lm_beam_search(log_probs, log_probs_length,
-                                                             self.beam_size)
-                for best_hypos, target_text in zip(hypos, text):
-                    pred_text =  " ".join(best_hypos[0].words).strip()
+                best_hypos = self.text_encoder.ctc_lm_beam_search(log_probs, log_probs_length,
+                                                                  self.beam_size)
+                for pred_text, target_text in zip(best_hypos, text):
                     wers.append(calc_wer(target_text, pred_text))
                 return sum(wers) / len(wers)
             else:

@@ -15,3 +15,5 @@ pyctcdecode
 torchaudio~=0.12.1
 pillow
 transformers
+
+https://github.com/kpu/kenlm/archive/master.zip

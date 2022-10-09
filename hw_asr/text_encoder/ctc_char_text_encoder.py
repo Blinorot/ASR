@@ -1,18 +1,19 @@
+import multiprocessing
 from collections import defaultdict
 from pathlib import Path
 from typing import List, NamedTuple
 
 import numpy as np
 import torch
+from hw_asr.utils import ROOT_PATH
+from pyctcdecode import build_ctcdecoder
 from scipy.special import softmax
 from tokenizers import Tokenizer
 from torch import Tensor
-from torchaudio.models.decoder import (CTCHypothesis, ctc_decoder,
-                                       download_pretrained_files)
 
 from .char_text_encoder import CharTextEncoder
 
-LM_FILES = download_pretrained_files("librispeech-4-gram")
+KENLM = ROOT_PATH / 'data' / 'lm' / 'librispeech'/ '3-gram.arpa'
 
 class Hypothesis(NamedTuple):
     text: str
@@ -37,6 +38,23 @@ class CTCCharTextEncoder(CharTextEncoder):
             self.char2ind = self.tokenizer.get_vocab()
             self.vocab = [key.lower() for key, _ in self.char2ind.items()]
             self.ind2char = {v: k.lower() for k, v in self.char2ind.items()}
+
+        self.lm_decoder = self._create_lm_decoder()
+
+    def _create_lm_decoder(self):
+        vocab = self.vocab
+        vocab[0] = ''
+
+        vocab = [elem.upper() for elem in vocab]
+
+        decoder = build_ctcdecoder(
+            vocab,
+            kenlm_model_path=str(KENLM),
+            alpha=0.9,
+            beta=1.2,
+        )
+
+        return decoder
 
     def encode(self, text) -> Tensor:
         text = self.normalize_text(text, self.lng)
@@ -75,7 +93,7 @@ class CTCCharTextEncoder(CharTextEncoder):
     
         beam = defaultdict(float)
 
-        probs = np.log(softmax(probs, axis=1)) # to be sure
+        probs = softmax(probs, axis=1) # to be sure
 
         for prob in probs:
             beam = self._extend_beam(beam, prob)
@@ -83,7 +101,7 @@ class CTCCharTextEncoder(CharTextEncoder):
 
         final_beam = defaultdict(float)
         for (sentence, last_char), v in beam.items():
-            final_sentence = (sentence + last_char).strip().replace(self.EMPTY_TOK, '')\
+            final_sentence = (sentence + last_char).strip().replace(self.EMPTY_TOK, "")\
                              .replace("'", "").replace("|", "")
             final_beam[final_sentence] += v
             
@@ -93,29 +111,22 @@ class CTCCharTextEncoder(CharTextEncoder):
         return result
 
     def ctc_lm_beam_search(self, probs: torch.tensor, lengths: torch.tensor,
-            beam_size: int = 100) -> List[List[CTCHypothesis]]:
+            beam_size: int = 100) -> List[str]:
         """
         Performs beam search with language model and returns 
         a list of pairs (hypothesis, hypothesis probability).
         """
 
-        beam_search_decoder = ctc_decoder(
-            lexicon=LM_FILES.lexicon,
-            tokens=self.vocab,
-            lm=LM_FILES.lm,
-            nbest=3,
-            beam_size=beam_size,
-            lm_weight=self.LM_WEIGHT,
-            word_score=self.WORD_SCORE,
-            blank_token="^",
-            unk_word="<UNK>",
-            sil_token="|",
-        )
+        probs = torch.nn.functional.log_softmax(probs, -1) # to be sure
 
-        probs = torch.nn.functional.log_softmax(probs, -1)
-    
-        beam_search_result = beam_search_decoder(probs, lengths)
-        return beam_search_result
+        logits_list = [probs[i][:lengths[i]].numpy() for i in range(lengths.shape[0])]
+
+        with multiprocessing.get_context("fork").Pool() as pool:
+            text_list = self.lm_decoder.decode_batch(pool, logits_list, beam_width=beam_size)
+
+        text_list = [elem.lower() for elem in text_list]
+
+        return text_list
 
     def _extend_beam(self, beam, prob):
         if len(beam) == 0:
@@ -129,11 +140,12 @@ class CTCCharTextEncoder(CharTextEncoder):
         for (sentence, last_char), v in beam.items():
             for i in range(len(prob)):
                 if self.ind2char[i] == last_char:
-                    new_beam[(sentence, last_char)] += v + prob[i]
+                    new_beam[(sentence, last_char)] += v * prob[i]
                 else:
                     new_last_char = self.ind2char[i]
-                    new_sentence = (sentence + last_char).replace(self.EMPTY_TOK, '')
-                    new_beam[(new_sentence, new_last_char)] += v + prob[i]
+                    new_sentence = (sentence + last_char).replace(self.EMPTY_TOK, '')\
+                                    .replace("'", "").replace("|", "")
+                    new_beam[(new_sentence, new_last_char)] += v * prob[i]
 
         return new_beam
 
