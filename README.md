@@ -1,6 +1,6 @@
 # ASR
 
-This is a repository for ASR homework of HSE DLA Course. Project includes Normalized-LSTM and DeepSpeechV2-like models written in PyTorch and trained\evaluated on [LibriSpeech](https://www.openslr.org/12) and Russian Partition of [Common Voice 11.0](https://commonvoice.mozilla.org/en/datasets).
+This is a repository for ASR homework of HSE DLA Course. Project includes Normalized-BiLSTM and DeepSpeechV2-like models written in PyTorch and trained\evaluated on [LibriSpeech](https://www.openslr.org/12) and Russian Partition of [Common Voice 11.0](https://commonvoice.mozilla.org/en/datasets).
 
 ## Getting Started
 
@@ -34,6 +34,8 @@ source asr_env
 pip install -r requirements.txt
 ```
 
+Donwload KenLM model for LibriSpeech Corpus by running `hw_asr/lm/get_lm.py` script.
+
 ## Project structure
 
 Repository is structured in the following way.
@@ -54,13 +56,15 @@ Repository is structured in the following way.
 
     -   `datasets`: code for downloading and structuring datasets. Includes code for Custom (Dir) Audio Dataset, LibriSpeech, LJSpeech and RU Common Voice 11.0 in the corresponding `name_dataset.py` file.
 
+    -   `lm`: contains script for downloading KenLM model for LibriSpeech Corpus.
+
     -   `logger`: code for different loggers (including W&B) and some utils for visualization.
 
     -   `loss`: includes wrapper over PyTorch CTC Loss.
 
     -   `metric`: includes CER\WER metric classes for Argmax and Beam Search (with optional LM)predictions and metrics calculation.
 
-    -   `model`: code for simple baseline MLP, Normalized-LSTM and DeepSpeechV2-like models (original with normalized gru, residual connections version) architectures.
+    -   `model`: code for simple baseline MLP, Normalized-BiLSTM and DeepSpeechV2-like models (original with normalized gru, residual connections version) architectures.
 
     -   `tests`: unit-tests that check basic functionality.
 
@@ -110,6 +114,16 @@ Existing tests are the following:
 
 -   `test_text_encoder.py`: checks `ctc_decode` function and `beam_search` (TODO)
 
+## BPE
+
+In order to generate HuggingFace Tokenizer run the following command:
+
+```bash
+python3 hw_asr/bpe/generate_tokenizer.py -v vocabulary_size
+```
+
+Where `vocabulary_size` value defines the number of tokens in Tokenizer. Default value is set to 60. Default Tokenizer config is presented in `hw_asr/bpe/tokenizer.json` config.
+
 ## Training
 
 To train model run the following script:
@@ -129,7 +143,15 @@ python3 test.py -c hw_asr/configs/test_configs/config_name.json \
 
 ## Pre-trained models
 
-TODO
+### English
+
+Pre-trained model for English language is Normalized-BiLSTM trained on LibriSpeech Corpus with `hw_asr/configs/lstm/libri.json` config.
+
+The saved checkpoint can be found in `saved/model/pre-trained/lstm_en/model_best.pth` and corresponding checkpoint in `saved/model/pre-trained/lstm_en/config.json`. **TODO**
+
+### Russian
+
+Pre-trained model for Russian language is Normalized-BiLSTM trained on Russian Partition of Common Voice 11.0 Corpus with `hw_asr/configs/lstm/ru.json` config. **TODO**
 
 ## Adding your own models
 
