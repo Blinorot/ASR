@@ -147,7 +147,7 @@ python3 test.py -c hw_asr/configs/test_configs/config_name.json \
 
 Pre-trained model for English language is Normalized-BiLSTM trained on LibriSpeech Corpus with `hw_asr/configs/lstm/libri.json` config.
 
-The saved checkpoint can be found in `saved/model/pre-trained/lstm_en/model_best.pth` and corresponding checkpoint in `saved/model/pre-trained/lstm_en/config.json`. **TODO**
+The saved checkpoint can be found in `saved/models/pre-trained/lstm_en/model_best.pth` and corresponding checkpoint in `saved/models/pre-trained/lstm_en/config.json`. **TODO**
 
 ### Russian
 
