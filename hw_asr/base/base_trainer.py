@@ -54,6 +54,9 @@ class BaseTrainer:
         if config.resume is not None:
             self._resume_checkpoint(config.resume)
 
+        if config.pretrained is not None:
+            self._init_model_from_pretrained(config.pretrained)
+
     @abstractmethod
     def _train_epoch(self, epoch):
         """
@@ -157,6 +160,13 @@ class BaseTrainer:
             torch.save(self.model.state_dict(), best_path_only_dict, _use_new_zipfile_serialization=False)
             self.logger.info("Saving current best: model_best.pth ...")
         
+    def _init_model_from_pretrained(self, weights_path):
+        """
+        Init model weights with the state dict from the checkpoint
+        """
+        checkpoint = torch.load(weights_path, self.device)
+        self.model.load_state_dict(checkpoint["state_dict"])
+
 
     def _resume_checkpoint(self, resume_path):
         """

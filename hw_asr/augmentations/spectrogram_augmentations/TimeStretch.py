@@ -18,7 +18,9 @@ class TimeStretch(AugmentationBase):
         if random.random() < self.p:
             stretch = self.min_stretch + torch.rand(1) * (self.max_stretch - self.min_stretch)
             x = data.unsqueeze(1)
-            return self._aug(x, stretch.item()).squeeze(1)
+            x = self._aug(x, stretch.item()).squeeze(1)
+            x = torch.absolute(x) # from complex to float
+            return x
         else:
             return data
         

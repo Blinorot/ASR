@@ -64,15 +64,8 @@
         {
             "type": "BeamSearchWERMetric",
             "args": {
-              "name": "WER (beam)",
-              "beam_size": 3
-            }
-        },
-        {
-            "type": "BeamSearchWERMetric",
-            "args": {
               "name": "WER (beam+lm)",
-              "beam_size": 3,
+              "beam_size": 1000,
               "use_lm": true
             }
         }
