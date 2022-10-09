@@ -39,7 +39,8 @@ class CTCCharTextEncoder(CharTextEncoder):
             self.vocab = [key.lower() for key, _ in self.char2ind.items()]
             self.ind2char = {v: k.lower() for k, v in self.char2ind.items()}
 
-        self.lm_decoder = self._create_lm_decoder()
+        if lng == "en":
+            self.lm_decoder = self._create_lm_decoder()
 
     def _create_lm_decoder(self):
         vocab = self.vocab
@@ -49,9 +50,7 @@ class CTCCharTextEncoder(CharTextEncoder):
 
         decoder = build_ctcdecoder(
             vocab,
-            kenlm_model_path=str(KENLM),
-            alpha=0.9,
-            beta=1.2,
+            kenlm_model_path=str(KENLM)
         )
 
         return decoder
