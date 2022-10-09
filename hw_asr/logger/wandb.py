@@ -11,17 +11,24 @@ class WanDBWriter:
         self.writer = None
         self.selected_module = ""
 
+        if config.config.get('test') is not None:
+            init_config = config['test']
+        elif config.config.get('trainer') is not None:
+            init_config = config['trainer']
+        else:
+            raise ValueError("please specify test or trainer config")
+
         try:
             import wandb
             wandb.login()
 
-            if config['trainer'].get('wandb_project') is None:
+            if init_config.get('wandb_project') is None:
                 raise ValueError("please specify project name for wandb")
 
             wandb.init(
-                project=config['trainer'].get('wandb_project'),
+                project=init_config.get('wandb_project'),
                 config=config.config,
-                name=config['trainer'].get('run_name', None)
+                name=init_config.get('run_name', None)
             )
             self.wandb = wandb
 

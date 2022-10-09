@@ -75,16 +75,21 @@ class CTCCharTextEncoder(CharTextEncoder):
     
         beam = defaultdict(float)
 
-        probs = softmax(probs, axis=1) # in case of training mode
+        probs = np.log(softmax(probs, axis=1)) # to be sure
 
         for prob in probs:
             beam = self._extend_beam(beam, prob)
             beam = self._cut_beam(beam, beam_size)
+
+        final_beam = defaultdict(float)
+        for (sentence, last_char), v in beam.items():
+            final_sentence = (sentence + last_char).strip().replace(self.EMPTY_TOK, '')\
+                             .replace("'", "").replace("|", "")
+            final_beam[final_sentence] += v
             
-        sorted_beam = sorted(beam.items(), key=lambda x: -x[1])
-        result = [Hypothesis((sentence + last_char).strip().replace(self.EMPTY_TOK, '')\
-                  .replace("'", "").replace("|", ""), v) \
-                  for (sentence, last_char), v in sorted_beam]
+        sorted_beam = sorted(final_beam.items(), key=lambda x: -x[1])
+        result = [Hypothesis(sentence, v) \
+                  for sentence, v in sorted_beam]
         return result
 
     def ctc_lm_beam_search(self, probs: torch.tensor, lengths: torch.tensor,
@@ -124,11 +129,11 @@ class CTCCharTextEncoder(CharTextEncoder):
         for (sentence, last_char), v in beam.items():
             for i in range(len(prob)):
                 if self.ind2char[i] == last_char:
-                    new_beam[(sentence, last_char)] += v * prob[i]
+                    new_beam[(sentence, last_char)] += v + prob[i]
                 else:
                     new_last_char = self.ind2char[i]
                     new_sentence = (sentence + last_char).replace(self.EMPTY_TOK, '')
-                    new_beam[(new_sentence, new_last_char)] += v * prob[i]
+                    new_beam[(new_sentence, new_last_char)] += v + prob[i]
 
         return new_beam
 
