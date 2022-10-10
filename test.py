@@ -96,6 +96,9 @@ def main(config, out_file):
     log = evaluation_metrics.result()
     for key, value in log.items():
         logger.info("    {:15s}: {}".format(str(key), value))
+        results.append({
+            f"metric_{str(key)}": value   
+        })
 
     with Path(out_file).open("w") as f:
         json.dump(results, f, indent=2)

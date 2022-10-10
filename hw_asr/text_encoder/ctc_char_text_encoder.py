@@ -65,7 +65,10 @@ class CTCCharTextEncoder(CharTextEncoder):
                 raise Exception(
                     f"Can't encode text '{text}'. Unknown chars: '{' '.join(unknown_chars)}'")
         else:
-            return Tensor(self.tokenizer.encode(text.upper()).ids).unsqueeze(0)
+            if self.lng == "en":
+                return Tensor(self.tokenizer.encode(text.upper()).ids).unsqueeze(0)
+            else:
+                return Tensor(self.tokenizer.encode(text.lower()).ids).unsqueeze(0)
 
     def ctc_decode(self, inds: List[int]) -> str:
         # based on seminar materials

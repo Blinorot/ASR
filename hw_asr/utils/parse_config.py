@@ -79,6 +79,8 @@ class ConfigParser:
 
         if args.pretrained is not None:
             pretrained = Path(args.pretrained)
+        else:
+            pretrained = None
 
         config = read_json(cfg_fname)
         if args.config and resume:
