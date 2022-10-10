@@ -6,7 +6,7 @@ from pathlib import Path
 from speechbrain.utils.data_utils import download_file
 
 URL_LINKS = {
-    "lm": "https://www.openslr.org/resources/11/3-gram.arpa.gz", 
+    "lm": "https://www.openslr.org/resources/11/4-gram.arpa.gz", 
 }
 
 def main():
@@ -14,8 +14,8 @@ def main():
     data_dir = data_dir / "data" / "lm" / "librispeech"
     data_dir.mkdir(exist_ok=True, parents=True)
 
-    arc_path = data_dir / "3-gram.arpa.gz"
-    arpa_path = data_dir / "3-gram.arpa"
+    arc_path = data_dir / "4-gram.arpa.gz"
+    arpa_path = data_dir / "4-gram.arpa"
 
     if not arpa_path.exists():
         print("Loading lm")

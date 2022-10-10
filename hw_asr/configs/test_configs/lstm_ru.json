@@ -1,0 +1,128 @@
+{
+    "name": "lstm_ru",
+    "n_gpu": 1,
+    "preprocessing": {
+        "sr": 16000,
+        "spectrogram": {
+            "type": "MelSpectrogram",
+            "args": {
+                "n_fft": 512,
+                "n_mels": 256
+            }
+        },
+        "log_spec": true
+    },
+    "augmentations": {
+        "wave": [],
+        "spectrogram": []
+    },
+    "arch": {
+        "type": "LSTMModel",
+        "args": {
+            "n_feats": 256,
+            "fc_hidden": 512,
+            "n_layers": 4
+        }
+    },
+    "data": {
+        "test": {
+            "batch_size": 10,
+            "num_workers": 5,
+            "datasets": [
+                {
+                    "type": "RuCommonVoiceDataset",
+                    "args": {
+                        "part": "test"
+                    }
+                }
+            ]
+        }
+    },
+    "optimizer": {
+        "type": "Adam",
+        "args": {
+            "lr": 0.0003
+        }
+    },
+    "loss": {
+        "type": "CTCLoss",
+        "args": {}
+    },
+    "metrics": [
+        {
+            "type": "ArgmaxWERMetric",
+            "args": {
+                "name": "WER (argmax)"
+            }
+        },
+        {
+            "type": "ArgmaxCERMetric",
+            "args": {
+                "name": "CER (argmax)"
+            }
+        },
+        {
+            "type": "BeamSearchCERMetric",
+            "args": {
+              "name": "CER (beam)",
+              "beam_size": 100
+            }
+        }
+    ],
+    "lr_scheduler": {
+        "type": "StepLR",
+        "args": {
+            "step_size": 2700,
+            "gamma": 0.5
+        }
+    },
+    "text_encoder": {
+        "type": "CTCCharTextEncoder",
+        "args": {
+            "alphabet": [
+                "\u0430",
+                "\u0431",
+                "\u0432",
+                "\u0433",
+                "\u0434",
+                "\u0435",
+                "\u0451",
+                "\u0436",
+                "\u0437",
+                "\u0438",
+                "\u0439",
+                "\u043a",
+                "\u043b",
+                "\u043c",
+                "\u043d",
+                "\u043e",
+                "\u043f",
+                "\u0440",
+                "\u0441",
+                "\u0442",
+                "\u0443",
+                "\u0444",
+                "\u0445",
+                "\u0446",
+                "\u0447",
+                "\u0448",
+                "\u0449",
+                "\u044a",
+                "\u044b",
+                "\u044c",
+                "\u044d",
+                "\u044e",
+                "\u044f",
+                " "
+            ],
+            "lng": "ru"
+        }
+    },
+    "test": {
+        "verbosity": 2,
+        "visualize": "wandb",
+        "wandb_project": "asr_project",
+        "run_name": "RU_CV_test_LSTM",
+        "sample_rate": 16000
+    }
+}

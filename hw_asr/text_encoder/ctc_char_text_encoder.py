@@ -13,7 +13,7 @@ from torch import Tensor
 
 from .char_text_encoder import CharTextEncoder
 
-KENLM = ROOT_PATH / 'data' / 'lm' / 'librispeech'/ '3-gram.arpa'
+KENLM = ROOT_PATH / 'data' / 'lm' / 'librispeech'/ '4-gram.arpa'
 
 class Hypothesis(NamedTuple):
     text: str
@@ -28,23 +28,23 @@ class CTCCharTextEncoder(CharTextEncoder):
         self.ind2char = dict(enumerate(self.vocab))
         self.char2ind = {v: k for k, v in self.ind2char.items()}
 
-        self.LM_WEIGHT = 3.23
-        self.WORD_SCORE = -0.26
-
         self.use_bpe = use_bpe
         if self.use_bpe:
-            tok_path = Path(__file__).absolute().resolve().parent.parent / 'bpe' / 'tokenizer.json'
+            if lng == "en":
+                tok_path = Path(__file__).absolute().resolve().parent.parent / 'bpe' / 'tokenizer.json'
+            else:
+                tok_path = Path(__file__).absolute().resolve().parent.parent / 'bpe' / 'ru_tokenizer.json'
             self.tokenizer = Tokenizer.from_file(str(tok_path))
             self.char2ind = self.tokenizer.get_vocab()
-            self.vocab = [key.lower() for key, _ in self.char2ind.items()]
             self.ind2char = {v: k.lower() for k, v in self.char2ind.items()}
+            self.vocab = [self.ind2char[ind] for ind in range(len(self.ind2char))]
 
         if lng == "en":
             self.lm_decoder = self._create_lm_decoder()
 
     def _create_lm_decoder(self):
         vocab = self.vocab
-        vocab[0] = ''
+        vocab[0] = ""
 
         vocab = [elem.upper() for elem in vocab]
 
@@ -123,7 +123,8 @@ class CTCCharTextEncoder(CharTextEncoder):
         with multiprocessing.get_context("fork").Pool() as pool:
             text_list = self.lm_decoder.decode_batch(pool, logits_list, beam_width=beam_size)
 
-        text_list = [elem.lower() for elem in text_list]
+        text_list = [elem.lower().replace("'", "").replace("|", "").replace("??", "")\
+                    .strip() for elem in text_list]
 
         return text_list
 
