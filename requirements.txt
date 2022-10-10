@@ -16,5 +16,6 @@ torchaudio~=0.12.1
 pillow
 transformers
 gdown
+jsonlines
 
 https://github.com/kpu/kenlm/archive/master.zip
