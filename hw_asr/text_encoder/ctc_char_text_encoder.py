@@ -13,7 +13,6 @@ from torch import Tensor
 
 from .char_text_encoder import CharTextEncoder
 
-KENLM = ROOT_PATH / 'data' / 'lm' / 'librispeech'/ '4-gram.arpa'
 
 class Hypothesis(NamedTuple):
     text: str
@@ -22,7 +21,8 @@ class Hypothesis(NamedTuple):
 class CTCCharTextEncoder(CharTextEncoder):
     EMPTY_TOK = "^"
 
-    def __init__(self, alphabet: List[str] = None, lng: str = "en", use_bpe: bool = False):
+    def __init__(self, alphabet: List[str] = None, lng: str = "en",
+                 use_bpe: bool = False, use_lm: bool = False):
         super().__init__(alphabet, lng)
         self.vocab = [self.EMPTY_TOK] + list(self.alphabet)
         self.ind2char = dict(enumerate(self.vocab))
@@ -40,17 +40,24 @@ class CTCCharTextEncoder(CharTextEncoder):
             self.vocab = [self.ind2char[ind] for ind in range(len(self.ind2char))]
 
         if lng == "en":
+            self.KENLM = ROOT_PATH / 'data' / 'lm' / 'librispeech'/ '4-gram.arpa'
+        else:
+            self.KENLM = ROOT_PATH / 'data' / 'lm' / 'nvidia'/ '4gram-pruned-0_1_7_9-ru-lm-set-1.0.arpa'
+        if use_lm:
             self.lm_decoder = self._create_lm_decoder()
 
     def _create_lm_decoder(self):
         vocab = self.vocab
         vocab[0] = ""
 
-        vocab = [elem.upper() for elem in vocab]
+        if self.lng == "en":
+            vocab = [elem.upper() for elem in vocab]
+        else:
+            vocab = [elem.lower() for elem in vocab]
 
         decoder = build_ctcdecoder(
             vocab,
-            kenlm_model_path=str(KENLM)
+            kenlm_model_path=str(self.KENLM)
         )
 
         return decoder

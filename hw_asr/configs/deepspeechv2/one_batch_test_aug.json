@@ -55,7 +55,7 @@
       "n_channels": [32, 32],
       "kernel_size": [[11, 41], [11, 21]],
       "stride": [[2, 2], [1, 2]],
-      "n_layers": 3
+      "n_layers": 5
     }
   },
   "data": {

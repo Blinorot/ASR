@@ -64,8 +64,9 @@
         {
             "type": "BeamSearchCERMetric",
             "args": {
-              "name": "CER (beam)",
-              "beam_size": 100
+              "name": "CER (beam+lm)",
+              "beam_size": 100,
+              "use_lm": true
             }
         }
     ],
@@ -115,7 +116,8 @@
                 "\u044f",
                 " "
             ],
-            "lng": "ru"
+            "lng": "ru",
+            "use_lm": true
         }
     },
     "test": {
