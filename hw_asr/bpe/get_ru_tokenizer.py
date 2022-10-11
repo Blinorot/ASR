@@ -2,6 +2,7 @@ import argparse
 import re
 from pathlib import Path
 
+import jsonlines
 import pandas as pd
 from tokenizers import Tokenizer
 from tokenizers.models import BPE
@@ -25,11 +26,24 @@ def main(args):
             text = text.lower()
             text = re.sub(r"[^а-я ]", "", text)
             f.write(text + "\n")
-    
+
+    data_dir = data_dir.parent / "ru_golos"
+    train_dir = data_dir / "manifest.jsonl"
+    assert train_dir.exists(), "Please download RU Golos first"
+
+    golos_txt_path = data_dir / "train.txt"
+    with open(str(golos_txt_path), "w") as f:
+        with jsonlines.open(str(train_dir)) as reader:
+            for obj in reader.iter(type=dict):
+                text = obj["text"]
+                text = text.lower()
+                text = re.sub(r"[^а-я ]", "", text)
+                f.write(text + "\n")
+
     tokenizer = Tokenizer(BPE(unk_token="[UNK]"))
     trainer = BpeTrainer(special_tokens=["^", " ", "[UNK]", "|", "'"], vocab_size=args.vocabulary)
     tokenizer.pre_tokenizer = Whitespace()
-    tokenizer.train([str(txt_path)], trainer)
+    tokenizer.train([str(txt_path), str(golos_txt_path)], trainer)
     save_path = Path(__file__).absolute().resolve().parent / "ru_tokenizer.json"
     tokenizer.save(str(save_path))
 
