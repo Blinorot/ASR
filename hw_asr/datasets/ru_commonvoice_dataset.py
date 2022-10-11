@@ -97,8 +97,8 @@ class RuCommonVoiceDataset(BaseDataset):
                     audio_tensor = torch.flip(audio_tensor, [0, 1])
                     audio_tensor = torchaudio.functional.vad(audio_tensor, sr, pre_trigger_time=0.15) # cut ending silence
                     audio_tensor = torch.flip(audio_tensor, [0, 1])
-                    mp3_path = str(mp3_path)[:-4] + "_vad.mp3"
-                    torchaudio.save(mp3_path, audio_tensor, sr)
+                    mp3_path = Path(str(mp3_path)[:-4] + "_vad.mp3")
+                    torchaudio.save(str(mp3_path), audio_tensor, sr)
 
                 t_info = torchaudio.info(str(mp3_path))
                 length = t_info.num_frames / t_info.sample_rate
