@@ -21,6 +21,7 @@ class LayerNormBiLSTM(nn.Module):
     def forward(self, input):
         output, h_n = self.first_LSTM(input)
         output = self._convert_bi_output_to_uni(output)
+        output = nn.functional.dropout(output, p=self.dropout, training=self.training)
         for i in range(len(self.other_LSTM)):
             output = self.layer_norms[i](output)
             output, h_n = self.other_LSTM[i](output, h_n)

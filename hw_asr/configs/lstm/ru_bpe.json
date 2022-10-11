@@ -22,7 +22,7 @@
       "n_feats": 256,
       "fc_hidden": 512,
       "n_layers": 5,
-      "dropout": 0.25
+      "dropout": 0.5
     }
   },
   "data": {
