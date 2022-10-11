@@ -1,7 +1,9 @@
+import concurrent.futures as cf
 import json
 import logging
 import os
 import shutil
+from asyncio import as_completed
 from pathlib import Path
 
 import pandas as pd
@@ -86,27 +88,33 @@ class RuCommonVoiceDataset(BaseDataset):
             mp3_dir = Path(mp3_dir)
             trans_path = self._data_dir / f"{part}.tsv"
             df = pd.read_csv(trans_path, sep='\t')
-            for _, row in df.iterrows():
-                m_id = row['path']
-                m_text = row['sentence'].strip()
-                mp3_path = mp3_dir / m_id
-                if use_vad:
-                    audio_tensor, sr = torchaudio.load(str(mp3_path))
-                    # Common voice has too much noise and silence and the start and end
-                    audio_tensor = torchaudio.functional.vad(audio_tensor, sr, pre_trigger_time=0.15) # cut leading silence
-                    audio_tensor = torch.flip(audio_tensor, [0, 1])
-                    audio_tensor = torchaudio.functional.vad(audio_tensor, sr, pre_trigger_time=0.15) # cut ending silence
-                    audio_tensor = torch.flip(audio_tensor, [0, 1])
-                    mp3_path = Path(str(mp3_path)[:-4] + "_vad.mp3")
-                    torchaudio.save(str(mp3_path), audio_tensor, sr)
+            with cf.ThreadPoolExecutor(max_workers=6) as executor: 
+                future_to_dict =  {executor.submit(add_to_index, mp3_dir, row, use_vad): row\
+                                   for _, row in df.iterrows()}
+                for future in cf.as_completed(future_to_dict):
+                    index.append(future.result())
+        return index    
 
-                t_info = torchaudio.info(str(mp3_path))
-                length = t_info.num_frames / t_info.sample_rate
-                index.append(
-                    {
-                        "path": str(mp3_path.absolute().resolve()),
-                        "text": m_text.lower(),
-                        "audio_len": length,
-                    }
-                )
-        return index
+
+def add_to_index(mp3_dir, row, use_vad):
+    m_id = row['path']
+    m_text = row['sentence'].strip()
+    mp3_path = mp3_dir / m_id
+    if use_vad:
+        audio_tensor, sr = torchaudio.load(str(mp3_path))
+        # Common voice has too much noise and silence and the start and end
+        audio_tensor = torchaudio.functional.vad(audio_tensor, sr, pre_trigger_time=0.15) # cut leading silence
+        audio_tensor = torch.flip(audio_tensor, [0, 1])
+        audio_tensor = torchaudio.functional.vad(audio_tensor, sr, pre_trigger_time=0.15) # cut ending silence
+        audio_tensor = torch.flip(audio_tensor, [0, 1])
+        mp3_path = Path(str(mp3_path)[:-4] + "_vad.mp3")
+        torchaudio.save(str(mp3_path), audio_tensor, sr)
+
+    t_info = torchaudio.info(str(mp3_path))
+    length = t_info.num_frames / t_info.sample_rate
+    res_dict= {
+              "path": str(mp3_path.absolute().resolve()),
+              "text": m_text.lower(),
+              "audio_len": length,
+    }
+    return res_dict
