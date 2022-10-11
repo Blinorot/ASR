@@ -88,7 +88,7 @@ class RuCommonVoiceDataset(BaseDataset):
             mp3_dir = Path(mp3_dir)
             trans_path = self._data_dir / f"{part}.tsv"
             df = pd.read_csv(trans_path, sep='\t')
-            with cf.ThreadPoolExecutor(max_workers=6) as executor: 
+            with cf.ThreadPoolExecutor(max_workers=100) as executor: 
                 future_to_dict =  {executor.submit(add_to_index, mp3_dir, row, use_vad): row\
                                    for _, row in df.iterrows()}
                 for future in cf.as_completed(future_to_dict):
