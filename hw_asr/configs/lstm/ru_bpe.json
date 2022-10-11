@@ -22,7 +22,7 @@
       "n_feats": 256,
       "fc_hidden": 512,
       "n_layers": 5,
-      "dropout": 0.1
+      "dropout": 0.25
     }
   },
   "data": {
@@ -34,7 +34,7 @@
             "type": "RuCommonVoiceDataset",
             "args": {
               "part": "train",
-              "use_vad": true,
+              "use_vad": false,
               "max_audio_length": 7.5,
               "max_text_length": 200
             }
@@ -59,7 +59,7 @@
             "type": "RuCommonVoiceDataset",
             "args": {
               "part": "dev",
-              "use_vad": true
+              "use_vad": false
             }
           }
         ]
@@ -72,7 +72,7 @@
             "type": "RuCommonVoiceDataset",
             "args": {
               "part": "test",
-              "use_vad": true
+              "use_vad": false
             }
           }
         ]
