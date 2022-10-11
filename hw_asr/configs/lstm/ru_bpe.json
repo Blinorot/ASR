@@ -33,7 +33,7 @@
           {
             "type": "RuCommonVoiceDataset",
             "args": {
-              "part": "test",
+              "part": "train",
               "max_audio_length": 7.5,
               "max_text_length": 200
             }
@@ -43,7 +43,7 @@
             "args": {
               "part": "train",
               "min_audio_length": 1.5,
-              "max_audio_length": 7.5,
+              "max_audio_length": 10.5,
               "max_text_length": 200,
               "limit": 50000
             }
