@@ -3,7 +3,7 @@ from torch import nn
 
 
 class LayerNormBiLSTM(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers):
+    def __init__(self, input_size, hidden_size, num_layers, dropout=0):
         super().__init__()
 
         self.first_LSTM = nn.LSTM(input_size=input_size, hidden_size=hidden_size,
@@ -16,6 +16,7 @@ class LayerNormBiLSTM(nn.Module):
             layer_norms.append(nn.LayerNorm(hidden_size))
         self.other_LSTM = nn.ModuleList(other_LSTM)
         self.layer_norms = nn.ModuleList(layer_norms)
+        self.dropout = dropout
 
     def forward(self, input):
         output, h_n = self.first_LSTM(input)
@@ -24,6 +25,7 @@ class LayerNormBiLSTM(nn.Module):
             output = self.layer_norms[i](output)
             output, h_n = self.other_LSTM[i](output, h_n)
             output = self._convert_bi_output_to_uni(output)
+            output = nn.functional.dropout(output, p=self.dropout, training=self.training)
         return output
         
     def _convert_bi_output_to_uni(self, output):
@@ -34,10 +36,10 @@ class LayerNormBiLSTM(nn.Module):
 
 
 class LSTMModel(BaseModel):
-    def __init__(self, n_feats, n_class, n_layers=10, fc_hidden=512, **batch):
+    def __init__(self, n_feats, n_class, n_layers=10, fc_hidden=512, dropout=0, **batch):
         super().__init__(n_feats, n_class, **batch)
         self.net = LayerNormBiLSTM(input_size=n_feats, hidden_size=fc_hidden,
-                                   num_layers=n_layers)
+                                   num_layers=n_layers, dropout=dropout)
         self.fc = nn.Linear(fc_hidden, n_class)
 
     def forward(self, spectrogram, **batch):
