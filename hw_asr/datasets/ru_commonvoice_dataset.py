@@ -2,10 +2,10 @@ import json
 import logging
 import os
 import shutil
-from curses.ascii import isascii
 from pathlib import Path
 
 import pandas as pd
+import torch
 import torchaudio
 from hw_asr.base.base_dataset import BaseDataset
 from hw_asr.utils import ROOT_PATH
@@ -15,12 +15,12 @@ from tqdm import tqdm
 logger = logging.getLogger(__name__)
 
 class RuCommonVoiceDataset(BaseDataset):
-    def __init__(self, part, data_dir=None, *args, **kwargs):
+    def __init__(self, part, data_dir=None, use_vad=False, *args, **kwargs):
         if data_dir is None:
             data_dir = ROOT_PATH / "data" / "datasets" / "ru_commonvoice"
             data_dir.mkdir(exist_ok=True, parents=True)
         self._data_dir = data_dir
-        index = self._get_or_load_index(part)
+        index = self._get_or_load_index(part, use_vad)
 
         super().__init__(index, *args, **kwargs)
 
@@ -55,18 +55,21 @@ class RuCommonVoiceDataset(BaseDataset):
         shutil.rmtree(str(self._data_dir / "clips"))
 
 
-    def _get_or_load_index(self, part):
-        index_path = self._data_dir / f"{part}_index.json"
+    def _get_or_load_index(self, part, use_vad):
+        if use_vad:
+            index_path = self._data_dir / f"{part}_vad_index.json"
+        else:
+            index_path = self._data_dir / f"{part}_index.json"
         if index_path.exists():
             with index_path.open() as f:
                 index = json.load(f)
         else:
-            index = self._create_index(part)
+            index = self._create_index(part, use_vad)
             with index_path.open("w") as f:
                 json.dump(index, f, indent=2)
         return index
 
-    def _create_index(self, part):
+    def _create_index(self, part, use_vad):
         index = []
         split_dir = self._data_dir / part
         if not split_dir.exists():
@@ -87,6 +90,16 @@ class RuCommonVoiceDataset(BaseDataset):
                 m_id = row['path']
                 m_text = row['sentence'].strip()
                 mp3_path = mp3_dir / m_id
+                if use_vad:
+                    audio_tensor, sr = torchaudio.load(str(mp3_path))
+                    # Common voice has too much noise and silence and the start and end
+                    audio_tensor = torchaudio.functional.vad(audio_tensor, sr, pre_trigger_time=0.15) # cut leading silence
+                    audio_tensor = torch.flip(audio_tensor, [0, 1])
+                    audio_tensor = torchaudio.functional.vad(audio_tensor, sr, pre_trigger_time=0.15) # cut ending silence
+                    audio_tensor = torch.flip(audio_tensor, [0, 1])
+                    mp3_path = str(mp3_path)[:-4] + "_vad.mp3"
+                    torchaudio.save(mp3_path, audio_tensor, sr)
+
                 t_info = torchaudio.info(str(mp3_path))
                 length = t_info.num_frames / t_info.sample_rate
                 index.append(

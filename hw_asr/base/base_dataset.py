@@ -66,14 +66,7 @@ class BaseDataset(Dataset):
     def load_audio(self, path):
         if Path(path).suffix == '.mp3': # Common Voice
             torchaudio.set_audio_backend('sox_io') # unix only support
-            audio_tensor, sr = torchaudio.load(path)
-            # Common voice has too much noise and silence and the start and end
-            audio_tensor = torchaudio.functional.vad(audio_tensor, sr, pre_trigger_time=0.15) # cut leading silence
-            audio_tensor = torch.flip(audio_tensor, [0, 1])
-            audio_tensor = torchaudio.functional.vad(audio_tensor, sr, pre_trigger_time=0.15) # cut ending silence
-            audio_tensor = torch.flip(audio_tensor, [0, 1])
-        else:
-            audio_tensor, sr = torchaudio.load(path)
+        audio_tensor, sr = torchaudio.load(path)
 
         audio_tensor = audio_tensor[0:1, :]  # remove all channels but the first
         target_sr = self.config_parser["preprocessing"]["sr"]
