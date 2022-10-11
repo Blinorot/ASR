@@ -39,7 +39,7 @@
                 "p": 0.01,
                 "min_stretch": 0.9,
                 "max_stretch": 1.1,
-                "n_freq": 256
+                "n_freq": 128
             }
         },
         {
