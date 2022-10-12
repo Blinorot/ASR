@@ -13,9 +13,45 @@
         "log_spec": true
     },
     "augmentations": {
-        "wave": [],
-        "spectrogram": []
-    },
+        "wave": [
+            {
+                "type": "PitchShift",
+                "args":{
+                    "p": 0.1,
+                    "min_transpose_semitones": -2,
+                    "max_transpose_semitones": 2,
+                    "sample_rate": 16000
+                }
+            },
+            {
+                "type": "Noise",
+                "args": {
+                    "p": 0.1,
+                    "max_snr_in_db": 20,
+                    "sample_rate": 16000
+                }
+            }
+        ],
+        "spectrogram": [
+            {
+                "type": "TimeStretch",
+                "args": {
+                    "p": 0.05,
+                    "min_stretch": 0.9,
+                    "max_stretch": 1.1,
+                    "n_freq": 256
+                }
+            },
+            {
+                "type": "TimeMasking",
+                "args": {
+                    "p": 0.4,
+                    "time_mask_param": 80,
+                    "time_masking_p": 0.5
+                }
+            }
+        ]
+      },
     "arch": {
         "type": "LSTMModel",
         "args": {
@@ -30,12 +66,10 @@
             "num_workers": 5,
             "datasets": [
                 {
-                    "type": "GolosDataset",
+                    "type": "RuCommonVoiceDataset",
                     "args": {
                         "part": "train",
-                        "names": ["crowd5", "crowd6"],
-                        "min_audio_length": 2,
-                        "max_audio_length": 8,
+                        "max_audio_length": 10,
                         "max_text_length": 200
                     }
                 }
