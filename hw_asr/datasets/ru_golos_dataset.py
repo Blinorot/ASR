@@ -95,8 +95,12 @@ class GolosDataset(BaseDataset):
                 for obj in reader.iter(type=dict):
                     if "farfield" not in str(wav_dir):
                         path_check = f"crowd/{str(wav_dir)[-1]}"
+                        if f"crowd{str(wav_dir)[-1]}" not in names:
+                            continue
                     else:
                         path_check = "farfield"
+                        if "farfield" not in names:
+                            continue
                     if  path_check not in obj["audio_filepath"]:
                         continue
                     w_id = obj['id'] + ".wav"
