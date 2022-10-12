@@ -55,7 +55,7 @@ class GolosDataset(BaseDataset):
         os.remove(str(arch_path))
 
     def _get_or_load_index(self, part, names):
-        index_path = self._data_dir / f"{part}_{'_'.join(*names)}_index.json"
+        index_path = self._data_dir / f"{part}_{'_'.join(names)}_index.json"
         if index_path.exists():
             with index_path.open() as f:
                 index = json.load(f)
