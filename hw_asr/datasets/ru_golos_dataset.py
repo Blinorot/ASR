@@ -15,6 +15,13 @@ from tqdm import tqdm
 logger = logging.getLogger(__name__)
 
 URL_LINKS = {
+    "farfield": "https://sc.link/1Z3",
+    "train_1": "https://sc.link/MvQ",
+    "train_2": "https://sc.link/NwL",
+    "train_3": "https://sc.link/Oxg",
+    "train_4": "https://sc.link/Pyz",
+    "train_5": "https://sc.link/Qz7",
+    "train_6": "https://sc.link/RAL",
     "train_7": "https://sc.link/VG5",
     "train_8": "https://sc.link/WJW",
     "train_9": "https://sc.link/XKk", 
@@ -31,12 +38,12 @@ class GolosDataset(BaseDataset):
         super().__init__(index, *args, **kwargs)
 
     def _load_dataset(self):
-        print(f"Loading GOLOS_7_8_9")
-        for i in [7, 8, 9]:
-            arch_path = self._data_dir / f"train_crowd{i}.tar"
+        print(f"Loading GOLOS_farfield_6_7_8_9")
+        for elem in ["crowd6", "crowd7", "crowd8", "crowd9", "farfield"]:
+            arch_path = self._data_dir / f"train_{elem}.tar"
 
             if not arch_path.exists():
-                download_file(URL_LINKS[f"train_{i}"], arch_path)
+                download_file(URL_LINKS[f"train_{elem}"], arch_path)
             shutil.unpack_archive(arch_path, self._data_dir)
             if i == 9:
                 shutil.move(str(self._data_dir / "train" / "manifest.jsonl"),\
@@ -71,7 +78,11 @@ class GolosDataset(BaseDataset):
             trans_path = self._data_dir / "manifest.jsonl"
             with jsonlines.open(str(trans_path)) as reader:
                 for obj in reader.iter(type=dict):
-                    if f"crowd/{str(wav_dir)[-1]}" not in obj["audio_filepath"]:
+                    if "farfield" not in str(wav_dir):
+                        path_check = f"crowd/{str(wav_dir)[-1]}"
+                    else:
+                        path_check = "farfield"
+                    if  path_check not in obj["audio_filepath"]:
                         continue
                     w_id = obj['id'] + ".wav"
                     w_text = obj['text'].strip()

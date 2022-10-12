@@ -7,7 +7,7 @@ import gdown
 from speechbrain.utils.data_utils import download_file
 
 URL_LINKS = {
-    "lstm_ru_1": "https://drive.google.com/uc?id=17aqU_YS1rZD9vLIfN_vd2ZtrV9UG9ZW6&export=download", 
+    "lstm_ru_1": "https://drive.google.com/uc?id=1VbNZJ5QNvMBDgNM9c_LVs_1E5XOY261-&export=download", 
     "lstm_en_1": "https://drive.google.com/uc?id=1FXzEjjT6BXEtmDYmsIHjlbAyEWwaYhj2&export=download"
 }
 
