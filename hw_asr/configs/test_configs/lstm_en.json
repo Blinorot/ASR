@@ -65,7 +65,7 @@
             "type": "BeamSearchWERMetric",
             "args": {
               "name": "WER (beam+lm)",
-              "beam_size": 1000,
+              "beam_size": 8000,
               "use_lm": true
             }
         }
@@ -80,7 +80,8 @@
     "text_encoder": {
         "type": "CTCCharTextEncoder",
         "args": {
-            "use_bpe": true
+            "use_bpe": true,
+            "use_lm": true
         }
     },
     "test": {
