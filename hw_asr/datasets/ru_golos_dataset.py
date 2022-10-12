@@ -28,44 +28,52 @@ URL_LINKS = {
 }
 
 class GolosDataset(BaseDataset):
-    def __init__(self, part, data_dir=None, *args, **kwargs):
+    def __init__(self, part, names=["crowd7", "crowd8", "crowd9"], data_dir=None, *args, **kwargs):
         if data_dir is None:
             data_dir = ROOT_PATH / "data" / "datasets" / "ru_golos"
             data_dir.mkdir(exist_ok=True, parents=True)
         self._data_dir = data_dir
-        index = self._get_or_load_index(part)
+        index = self._get_or_load_index(part, names)
 
         super().__init__(index, *args, **kwargs)
 
-    def _load_dataset(self):
-        print(f"Loading GOLOS_farfield_6_7_8_9")
-        for elem in ["crowd6", "crowd7", "crowd8", "crowd9", "farfield"]:
-            arch_path = self._data_dir / f"train_{elem}.tar"
+    def _load_dataset(self, name):
+        print(f"Loading GOLOS_{name}")
 
-            if not arch_path.exists():
-                download_file(URL_LINKS[f"train_{elem}"], arch_path)
+        if name == "farfield":
+            url_name = name
+        else:
+            url_name = f"train_{name[-1]}"
+
+        arch_path = self._data_dir / f"{url_name}.tar"
+        if not arch_path.exists():
+            download_file(URL_LINKS[url_name], arch_path)
             shutil.unpack_archive(arch_path, self._data_dir)
-            if i == 9:
-                shutil.move(str(self._data_dir / "train" / "manifest.jsonl"),\
-                            str(self._data_dir / "manifest.jsonl"))
-            os.remove(str(arch_path))
+        if name[-1] == "9":
+            shutil.move(str(self._data_dir / "train" / "manifest.jsonl"),\
+                        str(self._data_dir / "manifest.jsonl"))
+        os.remove(str(arch_path))
 
-    def _get_or_load_index(self, part):
-        index_path = self._data_dir / f"{part}_index.json"
+    def _get_or_load_index(self, part, names):
+        index_path = self._data_dir / f"{part}_{'_'.join(*names)}_index.json"
         if index_path.exists():
             with index_path.open() as f:
                 index = json.load(f)
         else:
-            index = self._create_index(part)
+            index = self._create_index(part, names)
             with index_path.open("w") as f:
                 json.dump(index, f, indent=2)
         return index
 
-    def _create_index(self, part):
+    def _create_index(self, part, names):
         index = []
         split_dir = self._data_dir / part
-        if not split_dir.exists():
-            self._load_dataset()
+        for name in names:
+            if name == "farfield":
+                if not (split_dir / name).exists():
+                    self._load_dataset(name)
+            elif not (split_dir / "crowd" / f"{name[-1]}").exists():
+                self._load_dataset(name)
 
         wav_dirs = set()
         for dirpath, dirnames, filenames in os.walk(str(split_dir)):
@@ -76,6 +84,7 @@ class GolosDataset(BaseDataset):
         ):
             wav_dir = Path(wav_dir)
             trans_path = self._data_dir / "manifest.jsonl"
+            assert trans_path.exists(), "download crowd9 first"
             with jsonlines.open(str(trans_path)) as reader:
                 for obj in reader.iter(type=dict):
                     if "farfield" not in str(wav_dir):
