@@ -26,6 +26,21 @@
                 "max_snr_in_db": 20,
                 "sample_rate": 16000
             }
+        },
+        {
+            "type": "Reverb",
+            "args": {
+                "p": 1,
+                "sample_rate": 16000
+            }
+        },
+        {
+            "type": "NoiseFromFiles",
+            "args": {
+                "p": 1,
+                "sample_rate": 16000,
+                "max_snr_in_db": 20
+            }
         }
     ],
     "spectrogram": [
@@ -51,7 +66,7 @@
     "type": "DeepSpeechV2Model",
     "args": {
       "n_feats": 128,
-      "fc_hidden": 512,
+      "fc_hidden": 128,
       "n_channels": [32, 32],
       "kernel_size": [[11, 41], [11, 21]],
       "stride": [[2, 2], [1, 2]],

@@ -9,6 +9,7 @@ from speechbrain.utils.data_utils import download_file
 URL_LINKS = {
     "lstm_ru_1": "https://drive.google.com/uc?id=1VbNZJ5QNvMBDgNM9c_LVs_1E5XOY261-&export=download",
     "lstm_ru_2": "https://drive.google.com/uc?id=13NDd8KOyGaQyUzyaG2l_RIbOOAgaGkDO&export=download",
+    "lstm_ru_3": "https://drive.google.com/uc?id=1zmp7XWGOKQjfLDrLHjL1bQ1p2X_2F0ud&export=download",
     "lstm_en_1": "https://drive.google.com/uc?id=1FXzEjjT6BXEtmDYmsIHjlbAyEWwaYhj2&export=download"
 }
 
