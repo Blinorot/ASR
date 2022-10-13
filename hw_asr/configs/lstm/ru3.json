@@ -13,9 +13,45 @@
         "log_spec": true
     },
     "augmentations": {
-        "wave": [],
-        "spectrogram": []
-    },
+        "wave": [
+            {
+                "type": "PitchShift",
+                "args":{
+                    "p": 0.1,
+                    "min_transpose_semitones": -2,
+                    "max_transpose_semitones": 2,
+                    "sample_rate": 16000
+                }
+            },
+            {
+                "type": "Noise",
+                "args": {
+                    "p": 0.15,
+                    "max_snr_in_db": 20,
+                    "sample_rate": 16000
+                }
+            }
+        ],
+        "spectrogram": [
+            {
+                "type": "TimeStretch",
+                "args": {
+                    "p": 0.05,
+                    "min_stretch": 0.9,
+                    "max_stretch": 1.1,
+                    "n_freq": 256
+                }
+            },
+            {
+                "type": "TimeMasking",
+                "args": {
+                    "p": 0.4,
+                    "time_mask_param": 80,
+                    "time_masking_p": 0.5
+                }
+            }
+        ]
+      },
     "arch": {
         "type": "LSTMModel",
         "args": {
@@ -25,8 +61,34 @@
         }
     },
     "data": {
-        "test": {
-            "batch_size": 10,
+        "train": {
+            "batch_size": 20,
+            "num_workers": 5,
+            "datasets": [
+                {
+                    "type": "RuCommonVoiceDataset",
+                    "args": {
+                        "part": "train",
+                        "max_audio_length": 10,
+                        "max_text_length": 200
+                    }
+                }
+            ]
+        },
+        "val": {
+            "batch_size": 20,
+            "num_workers": 5,
+            "datasets": [
+                {
+                    "type": "RuCommonVoiceDataset",
+                    "args": {
+                        "part": "dev"
+                    }
+                }
+            ]
+        },
+        "test-clean": {
+            "batch_size": 20,
             "num_workers": 5,
             "datasets": [
                 {
@@ -41,7 +103,7 @@
     "optimizer": {
         "type": "Adam",
         "args": {
-            "lr": 0.0003
+            "lr": 1e-5
         }
     },
     "loss": {
@@ -60,28 +122,12 @@
             "args": {
                 "name": "CER (argmax)"
             }
-        },
-        {
-            "type": "BeamSearchCERMetric",
-            "args": {
-              "name": "CER (beam+lm)",
-              "beam_size": 1000,
-              "use_lm": true
-            }
-        },
-        {
-            "type": "BeamSearchWERMetric",
-            "args": {
-              "name": "WER (beam+lm)",
-              "beam_size": 1000,
-              "use_lm": true
-            }
         }
     ],
     "lr_scheduler": {
         "type": "StepLR",
         "args": {
-            "step_size": 2700,
+            "step_size": 10800,
             "gamma": 0.5
         }
     },
@@ -124,15 +170,22 @@
                 "\u044f",
                 " "
             ],
-            "lng": "ru",
-            "use_lm": true
+            "lng": "ru"
         }
     },
-    "test": {
+    "trainer": {
+        "epochs": 32,
+        "save_dir": "saved/",
+        "save_period": 5,
         "verbosity": 2,
+        "monitor": "min val_loss",
+        "early_stop": 50,
         "visualize": "wandb",
         "wandb_project": "asr_project",
-        "run_name": "RU_CV_test_LSTM",
-        "sample_rate": 16000
+        "run_name": "RU_CV_train_LSTM2",
+        "sample_rate": 16000,
+        "len_epoch": 900,
+        "grad_norm_clip": 10,
+        "batch_accum_steps": 3
     }
 }
