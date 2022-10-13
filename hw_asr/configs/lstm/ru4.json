@@ -41,7 +41,7 @@
             {
                 "type": "NoiseFromFiles",
                 "args": {
-                    "p": 0.6,
+                    "p": 0.5,
                     "sample_rate": 16000,
                     "max_snr_in_db": 25
                 }
@@ -189,7 +189,7 @@
         }
     },
     "trainer": {
-        "epochs": 32,
+        "epochs": 15,
         "save_dir": "saved/",
         "save_period": 5,
         "verbosity": 2,
@@ -201,6 +201,6 @@
         "sample_rate": 16000,
         "len_epoch": 900,
         "grad_norm_clip": 10,
-        "batch_accum_steps": 3
+        "batch_accum_steps": 4
     }
 }
