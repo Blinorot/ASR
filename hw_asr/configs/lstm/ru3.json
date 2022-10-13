@@ -36,7 +36,7 @@
             {
                 "type": "TimeStretch",
                 "args": {
-                    "p": 0.05,
+                    "p": 0.1,
                     "min_stretch": 0.9,
                     "max_stretch": 1.1,
                     "n_freq": 256
@@ -45,9 +45,9 @@
             {
                 "type": "TimeMasking",
                 "args": {
-                    "p": 0.4,
+                    "p": 0.6,
                     "time_mask_param": 80,
-                    "time_masking_p": 0.5
+                    "time_masking_p": 0.6
                 }
             }
         ]
@@ -103,7 +103,7 @@
     "optimizer": {
         "type": "Adam",
         "args": {
-            "lr": 1e-5
+            "lr": 6e-5
         }
     },
     "loss": {
@@ -182,7 +182,7 @@
         "early_stop": 50,
         "visualize": "wandb",
         "wandb_project": "asr_project",
-        "run_name": "RU_CV_train_LSTM2",
+        "run_name": "RU_CV_train_LSTM3",
         "sample_rate": 16000,
         "len_epoch": 900,
         "grad_norm_clip": 10,
