@@ -41,27 +41,11 @@
         ],
         "spectrogram": [
             {
-                "type": "TimeStretch",
-                "args": {
-                    "p": 0.1,
-                    "min_stretch": 0.8,
-                    "max_stretch": 1.2,
-                    "n_freq": 256
-                }
-            },
-            {
                 "type": "TimeMasking",
                 "args": {
                     "p": 0.7,
                     "time_mask_param": 80,
                     "time_masking_p": 0.8
-                }
-            },
-            {
-                "type": "FrequencyMasking",
-                "args": {
-                    "p": 0.4,
-                    "freq_mask_param": 15
                 }
             }
         ]
@@ -83,6 +67,16 @@
                     "type": "RuCommonVoiceDataset",
                     "args": {
                         "part": "train",
+                        "max_audio_length": 10,
+                        "max_text_length": 200
+                    }
+                },
+                {
+                    "type": "GolosDataset",
+                    "args": {
+                        "part": "train",
+                        "names": ["farfield", "crowd6"],
+                        "min_text_length": 5,
                         "max_audio_length": 10,
                         "max_text_length": 200
                     }
@@ -117,7 +111,7 @@
     "optimizer": {
         "type": "Adam",
         "args": {
-            "lr": 6e-06
+            "lr": 1e-5
         }
     },
     "loss": {
@@ -188,7 +182,7 @@
         }
     },
     "trainer": {
-        "epochs": 15,
+        "epochs": 30,
         "save_dir": "saved/",
         "save_period": 5,
         "verbosity": 2,
@@ -196,7 +190,7 @@
         "early_stop": 50,
         "visualize": "wandb",
         "wandb_project": "asr_project",
-        "run_name": "RU_CV_train_LSTM5",
+        "run_name": "RU_CV_train_LSTM6",
         "sample_rate": 16000,
         "len_epoch": 900,
         "grad_norm_clip": 10,

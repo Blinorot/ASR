@@ -11,6 +11,7 @@ URL_LINKS = {
     "lstm_ru_2": "https://drive.google.com/uc?id=13NDd8KOyGaQyUzyaG2l_RIbOOAgaGkDO&export=download",
     "lstm_ru_3": "https://drive.google.com/uc?id=1zmp7XWGOKQjfLDrLHjL1bQ1p2X_2F0ud&export=download",
     "lstm_ru_4": "https://drive.google.com/uc?id=10KcqR6_QUb-kntK0VTx7kStwfkyqEMVs&export=download",
+    "lstm_ru_5": "https://drive.google.com/uc?id=1fpEhYwP7Q7ShEw3mH7Qh9gJFxASjZpYa&export=download",
     "lstm_en_1": "https://drive.google.com/uc?id=1FXzEjjT6BXEtmDYmsIHjlbAyEWwaYhj2&export=download"
 }
 
