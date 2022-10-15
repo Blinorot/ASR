@@ -17,7 +17,7 @@ from hw_asr.utils.parse_config import ConfigParser
 DEFAULT_CHECKPOINT_PATH = ROOT_PATH / "default_test_model" / "checkpoint.pth"
 
 
-def main(config, out_file):
+def main(config, out_file, beam_size):
     logger = config.get_logger("test")
     writer = get_visualizer(
         config, logger, config["test"]["visualize"]
@@ -85,11 +85,10 @@ def main(config, out_file):
                         "ground_trurh": batch["text"][i],
                         "pred_text_argmax": text_encoder.ctc_decode(argmax.cpu().numpy()),
                         "pred_text_beam_search": text_encoder.ctc_beam_search(
-                            batch["probs"][i][:batch["log_probs_length"][i]].numpy(), beam_size=3
-                        )[:10],
+                            batch["probs"][i][:batch["log_probs_length"][i]].numpy(), beam_size)[:10],
                         "pred_text_lm_search": "LM not used" if text_encoder.use_lm == False else\
                             text_encoder.ctc_lm_beam_search(batch["probs"][i][None, :],
-                            torch.tensor([batch["log_probs_length"][i]]), beam_size=3)
+                            torch.tensor([batch["log_probs_length"][i]]), beam_size)
                     }
                 )
 
@@ -158,8 +157,16 @@ if __name__ == "__main__":
         type=int,
         help="Number of workers for test dataloader",
     )
+    args.add_argument(
+        "--beamsize",
+        default=3,
+        type=int,
+        help="BeamSize used for making (pred, target) pairs in resulting json",
+    )
 
     args = args.parse_args()
+
+    beam_size = args.beamsize
 
     # set GPUs
     if args.device is not None:
@@ -200,6 +207,6 @@ if __name__ == "__main__":
 
     assert config.config.get("data", {}).get("test", None) is not None
     config["data"]["test"]["batch_size"] = args.batch_size
-    config["data"]["test"]["n_jobs"] = args.jobs
+    config["data"]["test"]["num_workers"] = args.jobs
 
-    main(config, args.output)
+    main(config, args.output, beam_size)

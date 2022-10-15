@@ -205,6 +205,10 @@ Test config should contain:
 
 See `hw_asr/configs/test_configs/*.json` for examples.
 
+`data` option can also be provided by `-t` option during the call of the file.
+
+The result of the test function is a json file containing pairs (target, {prediction}\{beam prediction}\{beam+lm prediction}) and average of metrics calculated on batches. Pairs in file are done with the beam size providied by `--beamsize` option during the call of the file.
+
 ## Pre-trained models
 
 ### English
