@@ -1,0 +1,158 @@
+{
+  "name": "lstm_en",
+  "n_gpu": 1,
+  "preprocessing": {
+    "sr": 16000,
+    "spectrogram": {
+      "type": "MelSpectrogram",
+      "args": {
+            "n_fft": 512,
+            "n_mels": 256
+      }
+    },
+    "log_spec": true
+  },
+  "augmentations": {
+    "wave": [
+        {
+            "type": "Reverb",
+            "args": {
+                "p": 0.9,
+                "sample_rate": 16000
+            }
+        },
+        {
+            "type": "NoiseFromFiles",
+            "args": {
+                "p": 0.5,
+                "sample_rate": 16000,
+                "max_snr_in_db": 25
+            }
+        }
+    ],
+    "spectrogram": [
+        {
+            "type": "TimeMasking",
+            "args": {
+                "p": 0.6,
+                "time_mask_param": 70,
+                "time_masking_p": 0.8
+            }
+        }
+    ]
+  },
+  "arch": {
+    "type": "LSTMModel",
+    "args": {
+      "n_feats": 256,
+      "fc_hidden": 512,
+      "n_layers": 4
+    }
+  },
+  "data": {
+    "train": {
+        "batch_size": 20,
+        "num_workers": 5,
+        "datasets": [
+          {
+            "type": "LibrispeechDataset",
+            "args": {
+              "part": "train-clean-100",
+              "max_audio_length": 16.5,
+              "max_text_length": 250
+            }
+          },
+          {
+            "type": "LibrispeechDataset",
+            "args": {
+              "part": "train-clean-360",
+              "max_audio_length": 16.5,
+              "max_text_length": 250
+            }
+          }
+        ]
+    },
+    "val": {
+        "batch_size": 20,
+        "num_workers": 5,
+        "datasets": [
+          {
+            "type": "LibrispeechDataset",
+            "args": {
+              "part": "dev-clean"
+            }
+          }
+        ]
+    },
+    "test-clean": {
+        "batch_size": 20,
+        "num_workers": 5,
+        "datasets": [
+          {
+            "type": "LibrispeechDataset",
+            "args": {
+              "part": "test-clean"
+            }
+          },
+          {
+            "type": "LibrispeechDataset",
+            "args": {
+              "part": "test-other"
+            }
+          }
+        ]
+    }
+  },
+  "optimizer": {
+    "type": "Adam",
+    "args": {
+      "lr": 1e-5
+    }
+  },
+  "loss": {
+    "type": "CTCLoss",
+    "args": {}
+  },
+  "metrics": [
+    {
+        "type": "ArgmaxWERMetric",
+        "args": {
+          "name": "WER (argmax)"
+        }
+    },
+    {
+        "type": "ArgmaxCERMetric",
+        "args": {
+          "name": "CER (argmax)"
+        }
+    }
+  ],
+  "lr_scheduler": {
+    "type": "StepLR",
+    "args": {
+      "step_size": 8100,
+      "gamma": 0.5
+    }
+  },
+  "text_encoder": {
+    "type": "CTCCharTextEncoder",
+    "args": {
+        "use_bpe": true
+    }
+  },
+  "trainer": {
+    "epochs": 10,
+    "save_dir": "saved/",
+    "save_period": 5,
+    "verbosity": 2,
+    "monitor": "min val_loss",
+    "early_stop": 50,
+    "visualize": "wandb",
+    "wandb_project": "asr_project",
+    "run_name": "Libri_train_LSTM",
+    "sample_rate": 16000,
+    "len_epoch": 900,
+    "grad_norm_clip": 10,
+    "batch_accum_steps": 3
+  }
+}
