@@ -39,6 +39,7 @@ class CTCCharTextEncoder(CharTextEncoder):
             self.ind2char = {v: k.lower() for k, v in self.char2ind.items()}
             self.vocab = [self.ind2char[ind] for ind in range(len(self.ind2char))]
 
+        self.use_lm = use_lm
         if lng == "en":
             self.KENLM = ROOT_PATH / 'data' / 'lm' / 'librispeech'/ '4-gram.arpa'
         else:
