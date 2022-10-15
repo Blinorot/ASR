@@ -76,18 +76,7 @@
                     "type": "RuCommonVoiceDataset",
                     "args": {
                         "part": "train",
-                        "max_audio_length": 10,
-                        "max_text_length": 200
-                    }
-                },
-                {
-                    "type": "GolosDataset",
-                    "args": {
-                        "part": "train",
-                        "names": ["crowd9"],
-                        "min_text_length": 5,
-                        "max_audio_length": 10,
-                        "max_text_length": 200
+                        "max_text_length": 220
                     }
                 }
             ]
@@ -120,7 +109,7 @@
     "optimizer": {
         "type": "Adam",
         "args": {
-            "lr": 6e-5
+            "lr": 5e-9
         }
     },
     "loss": {
@@ -142,12 +131,15 @@
         }
     ],
     "lr_scheduler": {
-        "type": "StepLR",
+        "type": "OneCycleLR",
         "args": {
-            "step_size": 10800,
-            "gamma": 0.5
+          "steps_per_epoch": 900,
+          "epochs": 25,
+          "anneal_strategy": "cos",
+          "max_lr": 3e-7,
+          "pct_start": 0.1
         }
-    },
+      },
     "text_encoder": {
         "type": "CTCCharTextEncoder",
         "args": {
@@ -191,7 +183,7 @@
         }
     },
     "trainer": {
-        "epochs": 45,
+        "epochs": 25,
         "save_dir": "saved/",
         "save_period": 5,
         "verbosity": 2,
