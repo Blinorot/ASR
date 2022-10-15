@@ -93,7 +93,13 @@
             "args": {
               "part": "test-clean"
             }
-          },
+          }
+        ]
+    },
+    "test-other": {
+        "batch_size": 20,
+        "num_workers": 5,
+        "datasets": [
           {
             "type": "LibrispeechDataset",
             "args": {
