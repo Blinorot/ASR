@@ -30,6 +30,12 @@ URL_LINKS = {
 
 class GolosDataset(BaseDataset):
     def __init__(self, part, names=["crowd7", "crowd8", "crowd9"], data_dir=None, *args, **kwargs):
+        """
+        :param part: which part of dataset to use (only train is supported)
+        :param names: which part of train split to use (crowd{i} or farfield),
+            crowd0 is not supported
+        :param data_dir: Path object with the path to data folder
+        """
         if data_dir is None:
             data_dir = ROOT_PATH / "data" / "datasets" / "ru_golos"
             data_dir.mkdir(exist_ok=True, parents=True)

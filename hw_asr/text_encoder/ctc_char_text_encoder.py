@@ -1,7 +1,7 @@
 import multiprocessing
 from collections import defaultdict
 from pathlib import Path
-from typing import List, NamedTuple
+from typing import List, NamedTuple, Optional
 
 import numpy as np
 import torch
@@ -21,8 +21,15 @@ class Hypothesis(NamedTuple):
 class CTCCharTextEncoder(CharTextEncoder):
     EMPTY_TOK = "^"
 
-    def __init__(self, alphabet: List[str] = None, lng: str = "en",
+    def __init__(self, alphabet: Optional[List[str]] = None, lng: str = "en",
                  use_bpe: bool = False, use_lm: bool = False):
+        """
+        :param alphabet: alphabet for language. If None it will be set to ascii
+        :param lng: language for the decoder, either English or Russian in short form
+        :param use_bpe: whether to use Tokenizer from hw_asr/bpe/*.json for BPE encoding\decoding
+        :param use_lm: whether to enable the support for Language Model Beam Search
+        """
+        
         super().__init__(alphabet, lng)
         self.vocab = [self.EMPTY_TOK] + list(self.alphabet)
         self.ind2char = dict(enumerate(self.vocab))
@@ -48,6 +55,9 @@ class CTCCharTextEncoder(CharTextEncoder):
             self.lm_decoder = self._create_lm_decoder()
 
     def _create_lm_decoder(self):
+        """
+        Creates ctc decoder with the support of Language Model
+        """
         vocab = self.vocab
         vocab[0] = ""
 
@@ -64,6 +74,12 @@ class CTCCharTextEncoder(CharTextEncoder):
         return decoder
 
     def encode(self, text) -> Tensor:
+        """
+        Encoding of the text
+        :param text: text which will be encoded
+
+        Works for both BPE and usual alphabet
+        """
         text = self.normalize_text(text, self.lng)
         if not self.use_bpe:
             try:
@@ -79,6 +95,12 @@ class CTCCharTextEncoder(CharTextEncoder):
                 return Tensor(self.tokenizer.encode(text.lower()).ids).unsqueeze(0)
 
     def ctc_decode(self, inds: List[int]) -> str:
+        """
+        CTC decoding: list of int to text
+        :param inds: list of indecies (encoded text)
+
+        Works for both BPE and usual alphabet
+        """
         # based on seminar materials
         last_char = self.EMPTY_TOK
         text = []
@@ -96,6 +118,10 @@ class CTCCharTextEncoder(CharTextEncoder):
                         beam_size: int = 100) -> List[Hypothesis]:
         """
         Performs beam search and returns a list of pairs (hypothesis, hypothesis probability).
+        :param probs: probabilities from model of shape [L, H]
+        :param beam_size: size of beam to use in decoding
+
+        Note: unpadding of probs should be done before passing to this function
         """
         assert len(probs.shape) == 2
         char_length, voc_size = probs.shape
@@ -125,6 +151,9 @@ class CTCCharTextEncoder(CharTextEncoder):
         """
         Performs beam search with language model and returns 
         a list of pairs (hypothesis, hypothesis probability).
+        :param probs: probabilities from model with shape [N, L, H]
+        :param lengths: tensor of shape [N,] containing lengthes without padding
+        :param beam_size: size of beam to use in decoding
         """
 
         probs = torch.nn.functional.log_softmax(probs, -1) # to be sure

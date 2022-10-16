@@ -9,7 +9,22 @@ logger = logging.getLogger(__name__)
 
 def collate_fn(dataset_items: List[dict]):
     """
-    Collate and pad fields in dataset items
+    Collate and pad fields in dataset items. Returns batch containing: spectrogram, its length,
+    encoded text and its length, original text, audio and audio path
+    
+    :param dataset_items: list of dicts from dataset
+
+    Dict contains the following keys:
+        spectrogram - the spectrogram of the audio (may be in log scale) after augmentations
+        text - the text from the audio
+        text_encoder - encoded text from the audio
+        audio_path - path to audio file
+        audio - tensor loaded from audio_path after augmentations
+        duration - the duration of an audio in seconds
+        log_spec - whether the spectrogram is in log scale or not
+
+    Note: for log scale padding is done with log(1e-5) not with zeros. This is because 
+        data should be padded with silence and silence in log scale is log(0) ~ log(1e-5)
     """
 
     batch_size = len(dataset_items)

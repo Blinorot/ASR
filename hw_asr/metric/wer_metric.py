@@ -12,6 +12,9 @@ class ArgmaxWERMetric(BaseMetric):
     WER Metric when predicted text is argmax of log_probs
     """
     def __init__(self, text_encoder: BaseTextEncoder, *args, **kwargs):
+        """
+        :param text_encoder: object of class BaseTextEncoder for decoding probabilities from model
+        """
         super().__init__(*args, **kwargs)
         self.text_encoder = text_encoder
 
@@ -35,6 +38,11 @@ class BeamSearchWERMetric(BaseMetric):
     Using Language Model is optional.
     """
     def __init__(self, text_encoder: BaseTextEncoder, beam_size: int, use_lm=False, *args, **kwargs):
+        """
+        :param text_encoder: object of class BaseTextEncoder for decoding probabilities from model
+        :param beam_size: size of beam used for searching
+        :param use_lm: whether to do usual beam search or with Language model
+        """
         super().__init__(*args, **kwargs)
         self.text_encoder = text_encoder
         self.beam_size = beam_size

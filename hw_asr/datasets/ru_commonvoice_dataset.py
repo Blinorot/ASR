@@ -18,6 +18,12 @@ logger = logging.getLogger(__name__)
 
 class RuCommonVoiceDataset(BaseDataset):
     def __init__(self, part, data_dir=None, use_vad=False, *args, **kwargs):
+        """
+        :param part: which part of dataset to use
+        :param data_dir: Path objecth with the path to data folder
+        :param use_vad: whether to preprocess all audios with Voice Activity Detector
+            in order to cut silence at the beggining and end of the audio
+        """
         if data_dir is None:
             data_dir = ROOT_PATH / "data" / "datasets" / "ru_commonvoice"
             data_dir.mkdir(exist_ok=True, parents=True)

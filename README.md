@@ -217,10 +217,10 @@ Pre-trained model for English language is Normalized-BiLSTM trained on LibriSpee
 
 The model can be downloaded by running `scripts/get_pretrained.py` script. The saved checkpoint can be found in `saved/models/pre-trained/lstm_en/config_{1, 2}/model_best.pth` and corresponding checkpoint in `saved/models/pre-trained/lstm_en/config_{1, 2}/config.json`.
 
-| Partition  | CER (%) | WER (%) |
-| ---------- | ------- | ------- |
-| test-clean | $44.4$  | $20.7$  |
-| test-other | TBD     | TBD     |
+| Partition  | CER (%) | WER (%) | WER (%) with LM |
+| ---------- | ------- | ------- | --------------- |
+| test-clean | $15.17$ | $41.87$ | $19.65$         |
+| test-other | TBD     | TBD     | TBD             |
 
 ### Russian
 
@@ -228,9 +228,9 @@ Pre-trained model for Russian language is Normalized-BiLSTM trained on Russian P
 
 The model (after each config) can be downloaded by running `scripts/get_pretrained.py` script. The saved checkpoint can be found in `saved/models/pre-trained/lstm_ru/config_{1-5}/model_best.pth` and corresponding checkpoint in `saved/models/pre-trained/lstm_ru/config_{1-5}/config.json`.
 
-| Partition | CER (%) | WER (%) |
-| --------- | ------- | ------- |
-| test      | $20.9$  | $52.2$  |
+| Partition | CER (%) | CER (%) with LM | WER(%) |
+| --------- | ------- | --------------- | ------ |
+| test      | $20.9$  | $52.2$          | $$     |
 
 ## Adding your own models
 
