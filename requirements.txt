@@ -1,5 +1,5 @@
-torch==1.11.0
-torchvision==0.12.0
+torch==1.12.1
+torchvision~=0.13.0
 numpy
 tqdm
 tensorboard
@@ -12,5 +12,10 @@ torch_audiomentations
 editdistance
 wandb
 pyctcdecode
-torchaudio~=0.11.0
+torchaudio~=0.12.1
 pillow
+transformers
+gdown
+jsonlines
+
+https://github.com/kpu/kenlm/archive/master.zip

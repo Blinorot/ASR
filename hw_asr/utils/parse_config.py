@@ -3,7 +3,7 @@ import json
 import logging
 import os
 from datetime import datetime
-from functools import reduce, partial
+from functools import partial, reduce
 from operator import getitem
 from pathlib import Path
 
@@ -11,17 +11,18 @@ from hw_asr import text_encoder as text_encoder_module
 from hw_asr.base.base_text_encoder import BaseTextEncoder
 from hw_asr.logger import setup_logging
 from hw_asr.text_encoder import CTCCharTextEncoder
-from hw_asr.utils import read_json, write_json, ROOT_PATH
+from hw_asr.utils import ROOT_PATH, read_json, write_json
 
 
 class ConfigParser:
-    def __init__(self, config, resume=None, modification=None, run_id=None):
+    def __init__(self, config, resume=None, pretrained=None, modification=None, run_id=None):
         """
         class to parse configuration json file. Handles hyperparameters for training,
         initializations of modules, checkpoint saving and logging module.
         :param config: Dict containing configurations, hyperparameters for training.
                        contents of `config.json` file for example.
-        :param resume: String, path to the checkpoint being loaded.
+        :param resume: String, path to the checkpoint for resuming being loaded.
+        :param pretrained: String, path to the checkpoint for initing weights being loaded.
         :param modification: Dict {keychain: value}, specifying position values to be replaced
                              from config dict.
         :param run_id: Unique Identifier for training processes.
@@ -30,6 +31,7 @@ class ConfigParser:
         # load config file and apply modification
         self._config = _update_config(config, modification)
         self.resume = resume
+        self.pretrained = pretrained
         self._text_encoder = None
 
         # set save_dir where trained model and log will be saved.
@@ -75,6 +77,11 @@ class ConfigParser:
             resume = None
             cfg_fname = Path(args.config)
 
+        if args.pretrained is not None:
+            pretrained = Path(args.pretrained)
+        else:
+            pretrained = None
+
         config = read_json(cfg_fname)
         if args.config and resume:
             # update new config for fine-tuning
@@ -84,7 +91,7 @@ class ConfigParser:
         modification = {
             opt.target: getattr(args, _get_opt_name(opt.flags)) for opt in options
         }
-        return cls(config, resume, modification)
+        return cls(config, resume, pretrained, modification)
 
     @staticmethod
     def init_obj(obj_dict, default_module, *args, **kwargs):

@@ -1,0 +1,205 @@
+{
+    "name": "lstm_ru",
+    "n_gpu": 1,
+    "preprocessing": {
+        "sr": 16000,
+        "spectrogram": {
+            "type": "MelSpectrogram",
+            "args": {
+                "n_fft": 512,
+                "n_mels": 256
+            }
+        },
+        "log_spec": true
+    },
+    "augmentations": {
+        "wave": [
+            {
+                "type": "PitchShift",
+                "args":{
+                    "p": 0.2,
+                    "min_transpose_semitones": -4,
+                    "max_transpose_semitones": 4,
+                    "sample_rate": 16000
+                }
+            },
+            {
+                "type": "Reverb",
+                "args": {
+                    "p": 0.8,
+                    "sample_rate": 16000
+                }
+            },
+            {
+                "type": "NoiseFromFiles",
+                "args": {
+                    "p": 0.5,
+                    "sample_rate": 16000,
+                    "max_snr_in_db": 20
+                }
+            }
+        ],
+        "spectrogram": [
+            {
+                "type": "TimeStretch",
+                "args": {
+                    "p": 0.1,
+                    "min_stretch": 0.8,
+                    "max_stretch": 1.2,
+                    "n_freq": 256
+                }
+            },
+            {
+                "type": "TimeMasking",
+                "args": {
+                    "p": 0.7,
+                    "time_mask_param": 80,
+                    "time_masking_p": 0.8
+                }
+            },
+            {
+                "type": "FrequencyMasking",
+                "args": {
+                    "p": 0.4,
+                    "freq_mask_param": 15
+                }
+            }
+        ]
+      },
+    "arch": {
+        "type": "LSTMModel",
+        "args": {
+            "n_feats": 256,
+            "fc_hidden": 512,
+            "n_layers": 5
+        }
+    },
+    "data": {
+        "train": {
+            "batch_size": 20,
+            "num_workers": 5,
+            "datasets": [
+                {
+                    "type": "RuCommonVoiceDataset",
+                    "args": {
+                        "part": "train",
+                        "max_audio_length": 10,
+                        "max_text_length": 200
+                    }
+                }
+            ]
+        },
+        "val": {
+            "batch_size": 20,
+            "num_workers": 5,
+            "datasets": [
+                {
+                    "type": "RuCommonVoiceDataset",
+                    "args": {
+                        "part": "dev"
+                    }
+                }
+            ]
+        },
+        "test-clean": {
+            "batch_size": 20,
+            "num_workers": 5,
+            "datasets": [
+                {
+                    "type": "RuCommonVoiceDataset",
+                    "args": {
+                        "part": "test"
+                    }
+                }
+            ]
+        }
+    },
+    "optimizer": {
+        "type": "Adam",
+        "args": {
+            "lr": 6e-06
+        }
+    },
+    "loss": {
+        "type": "CTCLoss",
+        "args": {}
+    },
+    "metrics": [
+        {
+            "type": "ArgmaxWERMetric",
+            "args": {
+                "name": "WER (argmax)"
+            }
+        },
+        {
+            "type": "ArgmaxCERMetric",
+            "args": {
+                "name": "CER (argmax)"
+            }
+        }
+    ],
+    "lr_scheduler": {
+        "type": "StepLR",
+        "args": {
+            "step_size": 8100,
+            "gamma": 0.5
+        }
+    },
+    "text_encoder": {
+        "type": "CTCCharTextEncoder",
+        "args": {
+            "alphabet": [
+                "\u0430",
+                "\u0431",
+                "\u0432",
+                "\u0433",
+                "\u0434",
+                "\u0435",
+                "\u0451",
+                "\u0436",
+                "\u0437",
+                "\u0438",
+                "\u0439",
+                "\u043a",
+                "\u043b",
+                "\u043c",
+                "\u043d",
+                "\u043e",
+                "\u043f",
+                "\u0440",
+                "\u0441",
+                "\u0442",
+                "\u0443",
+                "\u0444",
+                "\u0445",
+                "\u0446",
+                "\u0447",
+                "\u0448",
+                "\u0449",
+                "\u044a",
+                "\u044b",
+                "\u044c",
+                "\u044d",
+                "\u044e",
+                "\u044f",
+                " "
+            ],
+            "lng": "ru"
+        }
+    },
+    "trainer": {
+        "epochs": 15,
+        "save_dir": "saved/",
+        "save_period": 5,
+        "verbosity": 2,
+        "monitor": "min val_loss",
+        "early_stop": 50,
+        "visualize": "wandb",
+        "wandb_project": "asr_project",
+        "run_name": "RU_CV_train_LSTM5",
+        "sample_rate": 16000,
+        "len_epoch": 900,
+        "grad_norm_clip": 10,
+        "batch_accum_steps": 3
+    }
+}

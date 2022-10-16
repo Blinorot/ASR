@@ -1,8 +1,7 @@
-from typing import List, Callable
-
-from torch import Tensor
+from typing import Callable, List
 
 from hw_asr.augmentations.base import AugmentationBase
+from torch import Tensor
 
 
 class SequentialAugmentation(AugmentationBase):
@@ -12,5 +11,5 @@ class SequentialAugmentation(AugmentationBase):
     def __call__(self, data: Tensor) -> Tensor:
         x = data
         for augmentation in self.augmentation_list:
-            x = augmentation(data)
+            x = augmentation(x)
         return x

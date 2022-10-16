@@ -1,13 +1,12 @@
 from operator import xor
 
-from torch.utils.data import ConcatDataset, DataLoader
-
 import hw_asr.augmentations
 import hw_asr.datasets
 from hw_asr import batch_sampler as batch_sampler_module
 from hw_asr.base.base_text_encoder import BaseTextEncoder
 from hw_asr.collate_fn.collate import collate_fn
 from hw_asr.utils.parse_config import ConfigParser
+from torch.utils.data import ConcatDataset, DataLoader
 
 
 def get_dataloaders(configs: ConfigParser, text_encoder: BaseTextEncoder):

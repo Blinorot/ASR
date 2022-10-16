@@ -6,17 +6,22 @@ from pathlib import Path
 import torch
 from tqdm import tqdm
 
+import hw_asr.metric as module_metric
 import hw_asr.model as module_model
+from hw_asr.logger import get_visualizer
 from hw_asr.trainer import Trainer
-from hw_asr.utils import ROOT_PATH
+from hw_asr.utils import ROOT_PATH, MetricTracker
 from hw_asr.utils.object_loading import get_dataloaders
 from hw_asr.utils.parse_config import ConfigParser
 
 DEFAULT_CHECKPOINT_PATH = ROOT_PATH / "default_test_model" / "checkpoint.pth"
 
 
-def main(config, out_file):
+def main(config, out_file, beam_size):
     logger = config.get_logger("test")
+    writer = get_visualizer(
+        config, logger, config["test"]["visualize"]
+    )
 
     # define cpu or gpu if possible
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -30,6 +35,16 @@ def main(config, out_file):
     # build model architecture
     model = config.init_obj(config["arch"], module_model, n_class=len(text_encoder))
     logger.info(model)
+
+    # setup metrics
+    metrics = [
+        config.init_obj(metric_dict, module_metric, text_encoder=text_encoder)
+        for metric_dict in config["metrics"]
+    ]
+
+    evaluation_metrics = MetricTracker(
+            "loss", *[m.name for m in metrics], writer=writer
+    )
 
     logger.info("Loading checkpoint: {} ...".format(config.resume))
     checkpoint = torch.load(config.resume, map_location=device)
@@ -56,6 +71,10 @@ def main(config, out_file):
             batch["log_probs_length"] = model.transform_input_lengths(
                 batch["spectrogram_length"]
             )
+
+            for met in metrics:
+                evaluation_metrics.update(met.name, met(**batch))
+
             batch["probs"] = batch["log_probs"].exp().cpu()
             batch["argmax"] = batch["probs"].argmax(-1)
             for i in range(len(batch["text"])):
@@ -66,10 +85,23 @@ def main(config, out_file):
                         "ground_trurh": batch["text"][i],
                         "pred_text_argmax": text_encoder.ctc_decode(argmax.cpu().numpy()),
                         "pred_text_beam_search": text_encoder.ctc_beam_search(
-                            batch["probs"][i], batch["log_probs_length"][i], beam_size=100
-                        )[:10],
+                            batch["probs"][i][:batch["log_probs_length"][i]].numpy(), beam_size)[:10],
+                        "pred_text_lm_search": "LM not used" if text_encoder.use_lm == False else\
+                            text_encoder.ctc_lm_beam_search(batch["probs"][i][None, :],
+                            torch.tensor([batch["log_probs_length"][i]]), beam_size)
                     }
                 )
+
+    for metric_name in evaluation_metrics.keys():
+        writer.add_scalar(f"{metric_name}", evaluation_metrics.avg(metric_name))
+
+    log = evaluation_metrics.result()
+    for key, value in log.items():
+        logger.info("    {:15s}: {}".format(str(key), value))
+        results.append({
+            f"metric_{str(key)}": value   
+        })
+
     with Path(out_file).open("w") as f:
         json.dump(results, f, indent=2)
 
@@ -125,8 +157,16 @@ if __name__ == "__main__":
         type=int,
         help="Number of workers for test dataloader",
     )
+    args.add_argument(
+        "--beamsize",
+        default=3,
+        type=int,
+        help="BeamSize used for making (pred, target) pairs in resulting json",
+    )
 
     args = args.parse_args()
+
+    beam_size = args.beamsize
 
     # set GPUs
     if args.device is not None:
@@ -167,6 +207,6 @@ if __name__ == "__main__":
 
     assert config.config.get("data", {}).get("test", None) is not None
     config["data"]["test"]["batch_size"] = args.batch_size
-    config["data"]["test"]["n_jobs"] = args.jobs
+    config["data"]["test"]["num_workers"] = args.jobs
 
-    main(config, args.output)
+    main(config, args.output, beam_size)

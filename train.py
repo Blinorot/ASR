@@ -85,8 +85,16 @@ if __name__ == "__main__":
         "--resume",
         default=None,
         type=str,
-        help="path to latest checkpoint (default: None)",
+        help="path to latest checkpoint to resume training from it (default: None)",
     )
+    args.add_argument(
+        "-p",
+        "--pretrained",
+        default=None,
+        type=str,
+        help="path to latest checkpoint to init model weights with it (default: None)",
+    )
+
     args.add_argument(
         "-d",
         "--device",

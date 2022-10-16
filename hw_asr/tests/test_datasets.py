@@ -1,8 +1,8 @@
 import unittest
 
 import torch
-
-from hw_asr.datasets import LibrispeechDataset, CustomDirAudioDataset, CustomAudioDataset
+from hw_asr.datasets import (CustomAudioDataset, CustomDirAudioDataset,
+                             LibrispeechDataset, LJspeechDataset)
 from hw_asr.tests.utils import clear_log_folder_after_use
 from hw_asr.text_encoder.ctc_char_text_encoder import CTCCharTextEncoder
 from hw_asr.utils import ROOT_PATH
@@ -15,6 +15,19 @@ class TestDataset(unittest.TestCase):
         with clear_log_folder_after_use(config_parser):
             ds = LibrispeechDataset(
                 "dev-clean",
+                text_encoder=config_parser.get_text_encoder(),
+                config_parser=config_parser,
+                max_text_length=140,
+                max_audio_length=13,
+                limit=10,
+            )
+            self._assert_training_example_is_good(ds[0])
+
+    def test_ljspeech(self):
+        config_parser = ConfigParser.get_test_configs()
+        with clear_log_folder_after_use(config_parser):
+            ds = LJspeechDataset(
+                "test",
                 text_encoder=config_parser.get_text_encoder(),
                 config_parser=config_parser,
                 max_text_length=140,

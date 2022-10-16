@@ -2,7 +2,7 @@ import logging
 import logging.config
 from pathlib import Path
 
-from hw_asr.utils import read_json, ROOT_PATH
+from hw_asr.utils import ROOT_PATH, read_json
 
 
 def setup_logging(

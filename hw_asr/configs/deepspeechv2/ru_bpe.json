@@ -1,0 +1,173 @@
+{
+  "name": "lstm_ru",
+  "n_gpu": 1,
+  "preprocessing": {
+    "sr": 16000,
+    "spectrogram": {
+      "type": "MelSpectrogram",
+      "args": {
+            "n_fft": 512,
+            "n_mels": 128
+      }
+    },
+    "log_spec": true
+  },
+  "augmentations": {
+    "wave": [
+        {
+            "type": "PitchShift",
+            "args":{
+                "p": 0.05,
+                "sample_rate": 16000,
+                "min_transpose_semitones": -3,
+                "max_transpose_semitones": 3
+            }
+        },
+        {
+            "type": "Noise",
+            "args": {
+                "p": 0.05,
+                "max_snr_in_db": 15,
+                "sample_rate": 16000
+            }
+        }
+    ],
+    "spectrogram": [
+        {
+            "type": "TimeStretch",
+            "args": {
+                "p": 0.01,
+                "min_stretch": 0.9,
+                "max_stretch": 1.1,
+                "n_freq": 128
+            }
+        },
+        {
+            "type": "TimeMasking",
+            "args": {
+                "p": 0.1,
+                "time_masking_p": 0.5,
+                "time_mask_param": 40
+            }
+        }
+    ]
+  },
+  "arch": {
+    "type": "DeepSpeechV2Model",
+    "args": {
+      "n_feats": 128,
+      "fc_hidden": 512,
+      "n_channels": [32],
+      "kernel_size": [[11, 41]],
+      "stride": [[2, 2]],
+      "padding": [[0, 0]],
+      "n_layers": 5
+    }
+  },
+  "data": {
+    "train": {
+        "batch_size": 20,
+        "num_workers": 5,
+        "datasets": [
+          {
+            "type": "RuCommonVoiceDataset",
+            "args": {
+              "part": "train",
+              "max_audio_length": 16.5,
+              "max_text_length": 250
+            }
+          },
+          {
+            "type": "GolosDataset",
+            "args": {
+              "part": "train",
+              "min_audio_length": 1.5,
+              "max_audio_length": 8.5,
+              "max_text_length": 200,
+              "limit": 60000
+            }
+          }
+        ]
+    },
+    "val": {
+        "batch_size": 20,
+        "num_workers": 5,
+        "datasets": [
+          {
+            "type": "RuCommonVoiceDataset",
+            "args": {
+              "part": "dev"
+            }
+          }
+        ]
+    },
+    "test-clean": {
+        "batch_size": 20,
+        "num_workers": 5,
+        "datasets": [
+          {
+            "type": "RuCommonVoiceDataset",
+            "args": {
+              "part": "test"
+            }
+          }
+        ]
+    }
+  },
+  "optimizer": {
+    "type": "Adam",
+    "args": {
+      "lr": 3e-3
+    }
+  },
+  "loss": {
+    "type": "CTCLoss",
+    "args": {}
+  },
+  "metrics": [
+    {
+        "type": "ArgmaxWERMetric",
+        "args": {
+          "name": "WER (argmax)"
+        }
+    },
+    {
+        "type": "ArgmaxCERMetric",
+        "args": {
+          "name": "CER (argmax)"
+        }
+    }
+  ],
+  "lr_scheduler": {
+    "type": "OneCycleLR",
+    "args": {
+      "steps_per_epoch": 500,
+      "epochs": 50,
+      "anneal_strategy": "cos",
+      "max_lr": 3e-3,
+      "pct_start": 0.1
+    }
+  },
+  "text_encoder": {
+    "type": "CTCCharTextEncoder",
+    "args": {
+        "use_bpe": true,
+        "lng": "ru"
+    }
+  },
+  "trainer": {
+    "epochs": 50,
+    "save_dir": "saved/",
+    "save_period": 5,
+    "verbosity": 2,
+    "monitor": "min val_loss",
+    "early_stop": 200,
+    "visualize": "wandb",
+    "wandb_project": "asr_project",
+    "run_name": "RU_CV_train_DeepSpeech",
+    "sample_rate": 16000,
+    "len_epoch": 500,
+    "grad_norm_clip": 10,
+    "batch_accum_steps": 5
+  }
+}

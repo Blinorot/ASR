@@ -1,0 +1,94 @@
+{
+    "name": "lstm_en_test",
+    "n_gpu": 1,
+    "preprocessing": {
+        "sr": 16000,
+        "spectrogram": {
+            "type": "MelSpectrogram",
+            "args": {
+                "n_fft": 512,
+                "n_mels": 256
+            }
+        },
+        "log_spec": true
+    },
+    "augmentations": {
+        "wave": [],
+        "spectrogram": []
+    },
+    "arch": {
+        "type": "LSTMModel",
+        "args": {
+            "n_feats": 256,
+            "fc_hidden": 512,
+            "n_layers": 4
+        }
+    },
+    "data": {
+        "test": {
+            "batch_size": 5,
+            "num_workers": 5,
+            "datasets": [
+                {
+                    "type": "LibrispeechDataset",
+                    "args": {
+                        "part": "test-clean"
+                    }
+                }
+            ]
+        }
+    },
+    "optimizer": {
+        "type": "Adam",
+        "args": {
+            "lr": 0.0003
+        }
+    },
+    "loss": {
+        "type": "CTCLoss",
+        "args": {}
+    },
+    "metrics": [
+        {
+            "type": "ArgmaxWERMetric",
+            "args": {
+                "name": "WER (argmax)"
+            }
+        },
+        {
+            "type": "ArgmaxCERMetric",
+            "args": {
+                "name": "CER (argmax)"
+            }
+        },
+        {
+            "type": "BeamSearchWERMetric",
+            "args": {
+              "name": "WER (beam+lm)",
+              "beam_size": 8000,
+              "use_lm": true
+            }
+        }
+    ],
+    "lr_scheduler": {
+        "type": "StepLR",
+        "args": {
+            "step_size": 3300,
+            "gamma": 0.5
+        }
+    },
+    "text_encoder": {
+        "type": "CTCCharTextEncoder",
+        "args": {
+            "use_bpe": true,
+            "use_lm": true
+        }
+    },
+    "test": {
+        "verbosity": 2,
+        "visualize": "wandb",
+        "wandb_project": "asr_project",
+        "run_name": "Libri_test_LSTM",
+        "sample_rate": 16000
+    }
+}

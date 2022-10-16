@@ -5,11 +5,10 @@ import shutil
 from pathlib import Path
 
 import torchaudio
-from speechbrain.utils.data_utils import download_file
-from tqdm import tqdm
-
 from hw_asr.base.base_dataset import BaseDataset
 from hw_asr.utils import ROOT_PATH
+from speechbrain.utils.data_utils import download_file
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 

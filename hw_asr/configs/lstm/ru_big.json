@@ -1,0 +1,133 @@
+{
+  "name": "lstm_ru",
+  "n_gpu": 1,
+  "preprocessing": {
+    "sr": 16000,
+    "spectrogram": {
+      "type": "MelSpectrogram",
+      "args": {
+            "n_fft": 512,
+            "n_mels": 256
+      }
+    },
+    "log_spec": true
+  },
+  "augmentations": {
+    "wave": [],
+    "spectrogram": []
+  },
+  "arch": {
+    "type": "LSTMModel",
+    "args": {
+      "n_feats": 256,
+      "fc_hidden": 512,
+      "n_layers": 5
+    }
+  },
+  "data": {
+    "train": {
+        "batch_size": 20,
+        "num_workers": 5,
+        "datasets": [
+          {
+            "type": "RuCommonVoiceDataset",
+            "args": {
+              "part": "train",
+              "max_audio_length": 16.5,
+              "max_text_length": 250
+            }
+          },
+          {
+            "type": "GolosDataset",
+            "args": {
+              "part": "train",
+              "min_audio_length": 2,
+              "max_audio_length": 7.5,
+              "max_text_length": 200
+            }
+          }
+        ]
+    },
+    "val": {
+        "batch_size": 20,
+        "num_workers": 5,
+        "datasets": [
+          {
+            "type": "RuCommonVoiceDataset",
+            "args": {
+              "part": "dev"
+            }
+          }
+        ]
+    },
+    "test-clean": {
+        "batch_size": 20,
+        "num_workers": 5,
+        "datasets": [
+          {
+            "type": "RuCommonVoiceDataset",
+            "args": {
+              "part": "test"
+            }
+          }
+        ]
+    }
+  },
+  "optimizer": {
+    "type": "Adam",
+    "args": {
+      "lr": 3e-4
+    }
+  },
+  "loss": {
+    "type": "CTCLoss",
+    "args": {}
+  },
+  "metrics": [
+    {
+        "type": "ArgmaxWERMetric",
+        "args": {
+          "name": "WER (argmax)"
+        }
+    },
+    {
+        "type": "ArgmaxCERMetric",
+        "args": {
+          "name": "CER (argmax)"
+        }
+    }
+  ],
+  "lr_scheduler": {
+    "type": "StepLR",
+    "args": {
+      "step_size": 8100,
+      "gamma": 0.5
+    }
+  },
+  "text_encoder": {
+    "type": "CTCCharTextEncoder",
+    "args": {
+        "alphabet": [
+            "а", "б", "в", "г", "д", "е", "ё", "ж", "з", "и", "й", "к",
+            "л", "м", "н", "о", "п", "р", "с", "т", "у", "ф", "х", "ц",
+            "ч", "ш", "щ", "ъ", "ы", "ь", "э", "ю", "я", " "
+        ],
+        "lng": "ru"
+    }
+  },
+  "trainer": {
+    "epochs": 50,
+    "save_dir": "saved/",
+    "save_period": 5,
+    "verbosity": 2,
+    "monitor": "min val_loss",
+    "early_stop": 50,
+    "visualize": "wandb",
+    "wandb_project": "asr_project",
+    "run_name": "RU_CV_train_LSTM",
+    "sample_rate": 16000,
+    "len_epoch": 900,
+    "grad_norm_clip": 10,
+    "batch_accum_steps": 3
+  }
+}

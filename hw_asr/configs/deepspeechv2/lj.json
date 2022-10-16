@@ -1,0 +1,182 @@
+{
+  "name": "deepspeechv2",
+  "n_gpu": 1,
+  "preprocessing": {
+    "sr": 16000,
+    "spectrogram": {
+      "type": "MelSpectrogram",
+      "args": {
+      }
+    },
+    "log_spec": true
+  },
+  "augmentations": {
+    "wave": [
+        {
+            "type": "PitchShift",
+            "args":{
+                "p": 0.2,
+                "sample_rate": 16000
+            }
+        },
+        {
+            "type": "Noise",
+            "args": {
+                "p": 0.2,
+                "max_snr_in_db": 20,
+                "sample_rate": 16000
+            }
+        }
+    ],
+    "spectrogram": [
+        {
+            "type": "TimeStretch",
+            "args": {
+                "p": 0.2,
+                "min_stretch": 0.5,
+                "max_stretch": 1.1,
+                "n_freq": 128
+            }
+        },
+        {
+            "type": "FrequencyMasking",
+            "args": {
+                "p": 0.4,
+                "freq_mask_param": 40
+            }
+        }
+    ]
+  },
+  "arch": {
+    "type": "DeepSpeechV2Model",
+    "args": {
+      "n_feats": 128,
+      "fc_hidden": 512,
+      "n_channels": [32, 32],
+      "kernel_size": [[11, 41], [11, 21]],
+      "stride": [[2, 2], [1, 2]],
+      "n_layers": 3
+    }
+  },
+  "data": {
+    "train": {
+      "batch_size": 40,
+      "num_workers": 6,
+      "datasets": [
+        {
+          "type": "LJspeechDataset",
+          "args": {
+            "part": "train",
+            "max_audio_length": 16.0,
+            "min_audio_length": 6.0,
+            "max_text_length": 200
+          }
+        }
+      ]
+    },
+    "test": {
+      "batch_size": 10,
+      "num_workers": 5,
+      "datasets": [
+        {
+          "type": "LJspeechDataset",
+          "args": {
+            "part": "test",
+            "max_audio_length": 20.0,
+            "max_text_length": 200
+          }
+        }
+      ]
+    },
+    "test-other": {
+      "batch_size": 10,
+      "num_workers": 5,
+      "datasets": [
+        {
+          "type": "LibrispeechDataset",
+          "args": {
+            "part": "test-other",
+            "max_audio_length": 20.0,
+            "max_text_length": 200
+          }
+        }
+      ]
+    },
+    "test-clean": {
+      "batch_size": 10,
+      "num_workers": 5,
+      "datasets": [
+        {
+          "type": "LibrispeechDataset",
+          "args": {
+            "part": "test-clean",
+            "max_audio_length": 20.0,
+            "max_text_length": 200
+          }
+        }
+      ]
+    }
+  },
+  "optimizer": {
+    "type": "Adam",
+    "args": {
+      "lr": 3e-3
+    }
+  },
+  "loss": {
+    "type": "CTCLoss",
+    "args": {}
+  },
+  "metrics": [
+    {
+        "type": "ArgmaxWERMetric",
+        "args": {
+          "name": "WER (argmax)"
+        }
+    },
+    {
+        "type": "ArgmaxCERMetric",
+        "args": {
+          "name": "CER (argmax)"
+        }
+    },
+    {
+      "type": "BeamSearchWERMetric",
+      "args": {
+        "name": "WER (beam)",
+        "beam_size": 10
+      }
+    },
+    {
+      "type": "BeamSearchCERMetric",
+      "args": {
+        "name": "CER (beam)",
+        "beam_size": 10
+      }
+    }
+  ],
+  "lr_scheduler": {
+    "type": "OneCycleLR",
+    "args": {
+      "steps_per_epoch": 300,
+      "epochs": 50,
+      "anneal_strategy": "cos",
+      "max_lr": 1e-2,
+      "pct_start": 0.2
+    }
+  },
+  "trainer": {
+    "epochs": 50,
+    "save_dir": "saved/",
+    "save_period": 5,
+    "verbosity": 2,
+    "monitor": "min val_loss",
+    "early_stop": 50,
+    "visualize": "wandb",
+    "wandb_project": "asr_project",
+    "run_name": "LJ_train",
+    "sample_rate": 16000,
+    "len_epoch": 300,
+    "grad_norm_clip": 10
+  }
+}

@@ -1,5 +1,6 @@
 import logging
 import random
+from pathlib import Path
 from typing import List
 
 import numpy as np
@@ -23,16 +24,20 @@ class BaseDataset(Dataset):
             spec_augs=None,
             limit=None,
             max_audio_length=None,
+            min_audio_length=None,
+            min_text_length=None,
             max_text_length=None,
     ):
         self.text_encoder = text_encoder
         self.config_parser = config_parser
         self.wave_augs = wave_augs
         self.spec_augs = spec_augs
-        self.log_spec = config_parser["preprocessing"].get("log_spec", True) # Use log scale by default
+        self.log_spec = config_parser["preprocessing"].get("log_spec", None)
 
         self._assert_index_is_valid(index)
-        index = self._filter_records_from_dataset(index, max_audio_length, max_text_length, limit)
+        index = self._filter_records_from_dataset(index, max_audio_length, min_audio_length, 
+                                                  min_text_length, max_text_length,
+                                                  limit, self.text_encoder.lng)
         # it's a good idea to sort index by audio length
         # It would be easier to write length-based batch samplers later
         index = self._sort_index(index)
@@ -50,6 +55,7 @@ class BaseDataset(Dataset):
             "text": data_dict["text"],
             "text_encoded": self.text_encoder.encode(data_dict["text"]),
             "audio_path": audio_path,
+            "log_spec": self.log_spec,
         }
 
     @staticmethod
@@ -60,11 +66,18 @@ class BaseDataset(Dataset):
         return len(self._index)
 
     def load_audio(self, path):
+        if Path(path).suffix == '.mp3': # Common Voice
+            torchaudio.set_audio_backend('sox_io') # unix only support
         audio_tensor, sr = torchaudio.load(path)
+
         audio_tensor = audio_tensor[0:1, :]  # remove all channels but the first
         target_sr = self.config_parser["preprocessing"]["sr"]
+
         if sr != target_sr:
             audio_tensor = torchaudio.functional.resample(audio_tensor, sr, target_sr)
+
+        audio_tensor = audio_tensor / max(abs(audio_tensor.max()), abs(audio_tensor.min()))
+        
         return audio_tensor
 
     def process_wave(self, audio_tensor_wave: Tensor):
@@ -78,13 +91,14 @@ class BaseDataset(Dataset):
             audio_tensor_spec = wave2spec(audio_tensor_wave)
             if self.spec_augs is not None:
                 audio_tensor_spec = self.spec_augs(audio_tensor_spec)
-            if self.log_spec:
+            if self.log_spec is not None and self.log_spec:
                 audio_tensor_spec = torch.log(audio_tensor_spec + 1e-5)
             return audio_tensor_wave, audio_tensor_spec
 
     @staticmethod
     def _filter_records_from_dataset(
-            index: list, max_audio_length, max_text_length, limit
+            index: list, max_audio_length, min_audio_length, min_text_length, 
+            max_text_length, limit, lng="en"
     ) -> list:
         initial_size = len(index)
         if max_audio_length is not None:
@@ -97,11 +111,21 @@ class BaseDataset(Dataset):
         else:
             exceeds_audio_length = False
 
+        if min_audio_length is not None:
+            short_audio_length = np.array([el["audio_len"] for el in index]) < min_audio_length
+            _total = short_audio_length.sum()
+            logger.info(
+                f"{_total} ({_total / initial_size:.1%}) records are shorter then "
+                f"{min_audio_length} seconds. Excluding them."
+            )
+        else:
+            short_audio_length = False
+
         initial_size = len(index)
         if max_text_length is not None:
             exceeds_text_length = (
                     np.array(
-                        [len(BaseTextEncoder.normalize_text(el["text"])) for el in index]
+                        [len(BaseTextEncoder.normalize_text(el["text"], lng)) for el in index]
                     )
                     >= max_text_length
             )
@@ -113,7 +137,22 @@ class BaseDataset(Dataset):
         else:
             exceeds_text_length = False
 
-        records_to_filter = exceeds_text_length | exceeds_audio_length
+        if min_text_length is not None:
+            short_text_length = (
+                    np.array(
+                        [len(BaseTextEncoder.normalize_text(el["text"], lng)) for el in index]
+                    )
+                    < min_text_length
+            )
+            _total = short_text_length.sum()
+            logger.info(
+                f"{_total} ({_total / initial_size:.1%}) records are shorter then "
+                f"{min_text_length} characters. Excluding them."
+            )
+        else:
+            short_text_length = False
+
+        records_to_filter = exceeds_text_length | short_audio_length | short_text_length | exceeds_audio_length
 
         if records_to_filter is not False and records_to_filter.any():
             _total = records_to_filter.sum()
