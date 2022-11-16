@@ -30,7 +30,7 @@ cd path/to/cloned/ASR/project
 Install required python packages to python environment:
 
 ```bash
-source asr_env
+source asr_env/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -230,7 +230,7 @@ The model (after each config) can be downloaded by running `scripts/get_pretrain
 
 | Partition | CER (%) | CER (%) with LM | WER(%) |
 | --------- | ------- | --------------- | ------ |
-| test      | $20.9$  | $52.2$          | $$     |
+| test      | $20.9$  | $16.7$          | TBD    |
 
 ## Adding your own models
 
