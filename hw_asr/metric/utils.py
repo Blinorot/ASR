@@ -10,6 +10,8 @@ def calc_cer(target_text, predicted_text) -> float:
     :param target_text: original text
     :param predicted_text: text from the model 
     """
+    target_text = target_text.lower()
+    predicted_text = predicted_text.lower()
     if len(target_text) == 0:
         return 1
     return editdistance.distance(target_text, predicted_text) / len(target_text)
@@ -20,6 +22,8 @@ def calc_wer(target_text, predicted_text) -> float:
     :param target_text: original text
     :param predicted_text: text from the model 
     """
+    target_text = target_text.lower()
+    predicted_text = predicted_text.lower()
     splitted_target = target_text.split(' ')
     splitted_predicted = predicted_text.split(' ')
     if len(splitted_target) == 0:
